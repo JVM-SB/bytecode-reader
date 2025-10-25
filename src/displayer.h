@@ -4,4 +4,6 @@
 
 #include "classfile.h"
 
+void displayClassFile(const ClassFile *cf);
+
 #endif  // DISPLAYER_H
