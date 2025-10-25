@@ -8,14 +8,14 @@
 
 
 // Leitores de Inteiros
-u1 u1Read(FILE *file);
-u2 u2Read(FILE *file);
-u4 u4Read(FILE *file);
+static u1 u1Read(FILE *file);
+static u2 u2Read(FILE *file);
+static u4 u4Read(FILE *file);
 
 
 // Leitores de Estruturas
-ClassFile* readFile(char *);
-cp_info* readConstantPool(FILE *file, u2 cp_count);
+ClassFile* readFile(const char *);
+static cp_info* readConstantPool(FILE *file, u2 cp_count);
 
 u2* readInterfaces(FILE *file, u2 interfaces_count);
 
@@ -57,7 +57,8 @@ char* decodeStringUTF8(cp_info *cp);
 
 char* decodeAccessFlags(u2 flag);
 
-// Função de Liberação de Memória
+
+// Liberadores de Memória
 void freeClassFile(ClassFile *cf);
 
 #endif // READER_H
