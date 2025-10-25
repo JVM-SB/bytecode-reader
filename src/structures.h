@@ -190,6 +190,12 @@ typedef struct method_info {
     attribute_info *attributes;
 } method_info;
 
+typedef struct exception_table{
+    u2 start_pc;
+    u2 end_pc;
+    u2 handler_pc;
+    u2 catch_type;
+} exception_table;
 
 // Attribute Code
 typedef struct code_attribute {
@@ -204,13 +210,6 @@ typedef struct code_attribute {
     u2 attributes_count;
     attribute_info *attributes;
 } code_attribute;
-
-typedef struct exception_table{
-    u2 start_pc;
-    u2 end_pc;
-    u2 handler_pc;
-    u2 catch_type;
-} exception_table;
 
 
 // Verification Type Info
@@ -268,13 +267,6 @@ typedef struct constantValue_attribute {
     u2 constantvalue_index;
 } constantValue_attribute;
 
-typedef struct stackMapTable_attribute {
-    u2 attribute_name_index;
-    u4 attribute_length;
-    u2 number_of_entries;
-    stack_map_frame** entries;
-} stackMapTable_attribute;
-
 typedef struct stack_map_frame {
     u1 frame_type;
     union {
@@ -322,6 +314,15 @@ typedef struct stack_map_frame {
     } map_frame_type;
 
 } stack_map_frame;
+
+typedef struct stackMapTable_attribute {
+    u2 attribute_name_index;
+    u4 attribute_length;
+    u2 number_of_entries;
+    stack_map_frame** entries;
+} stackMapTable_attribute;
+
+
 
 typedef struct exceptions_attribute {
     u2 attribute_name_index;
@@ -417,6 +418,9 @@ typedef struct deprecated_attribute {
     u4 attribute_length;
 } deprecated_attribute;
 
+typedef struct annotation annotation;
+struct element_value;
+
 typedef struct element_value {
     u1 tag;
     union {
@@ -429,11 +433,11 @@ typedef struct element_value {
 
         u2 class_info_index;
 
-        annotation annotation_value;
+        annotation* annotation_value;
 
         struct {   
             u2 num_values;
-            element_value* values;
+            struct element_value* values;
         } array_value;
 
     } value;
@@ -448,6 +452,7 @@ typedef struct annotation {
         element_value value;
     } *element_value_pairs;
 } annotation;
+
 
 typedef struct runtimeVisibleAnnotations_attribute {
     u2 attribute_name_index;
