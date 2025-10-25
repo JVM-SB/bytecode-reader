@@ -274,7 +274,7 @@ instruction* buildInstructions(void) {
                 instructions[idx].argument_type = NULL;
             }
         } else {
-            instructions[idx].name = "unknow";
+            instructions[idx].name = "unknown";
             instructions[idx].opcode = UINT8_MAX;
             instructions[idx].num_arguments = UINT8_MAX;
             instructions[idx].argument_type = NULL;
