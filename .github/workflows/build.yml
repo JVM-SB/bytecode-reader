@@ -1,0 +1,39 @@
+name: CI Build e Análise Estática/Dinâmica
+
+on:
+  push:
+    branches: [ "main" ]
+
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-analyze:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do Repositório
+        uses: actions/checkout@v4
+
+      - name: Instalar Dependências
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cppcheck
+
+      # --error-exitcode=1 faz o job falhar se o cppcheck encontrar erros
+      - name: Análise Estática (cppcheck)
+        run: |
+          cppcheck --enable=all --suppress=missingIncludeSystem --error-exitcode=1 .
+
+      # -g: Adiciona símbolos de debug (essencial para o AddressSanitizer)
+      - name: Compilar com C99 e AddressSanitizer
+        run: |
+          gcc -std=c99 -Wall -Wextra -g -fsanitize=address -o class-reader \
+            main.c \
+            reader.c \
+            instructions.c \
+            displayer.c
+
+      - name: Análise Dinâmica (Run with AddressSanitizer)
+        run: |
+          ./class-reader ./exemplos/tests/HelloWorld.class || true
