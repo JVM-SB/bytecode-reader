@@ -1,10 +1,12 @@
 #ifndef INSTRUCTIONS_H
 #define INSTRUCTIONS_H
 
+#define totalEnumOpCodes 202
+
 #include "classfile.h"
 
 typedef struct instruction {
-    char *name;
+    const char *name;
     u1 opcode;
     u1 num_arguments;
     u4 *argument_type;
@@ -17,10 +19,9 @@ typedef struct instr_data{
 
 
 extern const instr_data instruction_data[totalEnumOpCodes];
+
 instruction* buildInstructions(void);
 
-
-const u1 totalEnumOpCodes = 202;
 typedef enum instructions_opcode {
     nop                 = 0x00,
     aconst_null         = 0x01,
@@ -147,7 +148,7 @@ typedef enum instructions_opcode {
     dmul                = 0x6B,
 
     idiv                = 0x6C,
-    ldiv                = 0x6D,
+    ldiv_                = 0x6D,
     fdiv                = 0x6E,
     ddiv                = 0x6F,
 

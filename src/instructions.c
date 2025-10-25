@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdlib.h>
 
 #include "instructions.h"
 
@@ -129,7 +130,7 @@ const instr_data instruction_data[totalEnumOpCodes] = {
     [dmul]              = {"dmul", 0},
 
     [idiv]              = {"idiv", 0},
-    [ldiv]              = {"ldiv", 0},
+    [ldiv_]              = {"ldiv_", 0},
     [fdiv]              = {"fdiv", 0},
     [ddiv]              = {"ddiv", 0},
 
@@ -163,8 +164,8 @@ const instr_data instruction_data[totalEnumOpCodes] = {
     [iinc]              = {"iinc", 2},
 
     [i2l]               = {"i2l", 0},
-    [i2l]               = {"i2l", 0},
-    [i2l]               = {"i2l", 0},
+    [i2f]               = {"i2f", 0},
+    [i2d]               = {"i2d", 0},
     [l2i]               = {"l2i", 0},
     [l2f]               = {"l2f", 0},
     [l2d]               = {"l2d", 0},
