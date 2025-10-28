@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-
 #include "reader.h"
 #include "displayer.h"
 
@@ -17,8 +16,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    displayClassFile(cf);
-
+    // displayClassFile(cf);
     freeClassFile(cf);
 
     return 0;
