@@ -1,6 +1,7 @@
 // TODO: Implementar a exibição do arquivo de classe
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "displayer.h"
 #include "structures.h"
 
