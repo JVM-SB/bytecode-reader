@@ -33,9 +33,10 @@ stack_map_frame* readStackMapFrame(FILE *fp);
 
 exception_table* readExceptionTable (FILE *fp, u2 size);
 
-classes* readClasses(FILE *fp);
-innerClasses_attribute* readInnerClasses(FILE *fp, cp_info *cp);
+classes* readClasses(FILE *fp, u2 size);
 
+innerClasses_attribute* readInnerClasses(FILE *fp);
+lineNumberTable_attribute* readLineNumberTableAttribute(FILE *fp);
 signature_attribute* readSignature(FILE *fp);
 
 line_number_table* readLineNumberTable(FILE *fp, cp_info *cp);
