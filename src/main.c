@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // displayClassFile(cf);
+    displayClassFile(cf);
     freeClassFile(cf);
 
     return 0;
