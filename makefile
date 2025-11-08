@@ -70,8 +70,8 @@ asan:
 
 # Executa o analisador estático cppcheck no diretório src
 check:
-	@echo "Executando cppcheck em $(SRC_DIR)..."
-	cppcheck --enable=all --suppress=missingIncludeSystem --check-level=exhaustive $(SRC_DIR)
+	@echo "Executando cppcheck em todo o projeto..."
+	cppcheck --enable=all --suppress=missingIncludeSystem --check-level=exhaustive --error-exitcode=1 -I$(INC_DIR) $(SRCS:%=$(SRC_DIR)/%)
 
 # Define regras que não geram arquivos
 .PHONY: all clean asan check
