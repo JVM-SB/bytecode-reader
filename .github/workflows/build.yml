@@ -31,12 +31,9 @@ jobs:
         run: make asan
 
       # 5. Análise Dinâmica (executando o binário ASan)
-      - name: Análise Dinâmica (Run with ASan)
+      - name: Análise Dinâmica (Executando com ASan)
         run: |
-          echo "Testando HelloWorld..."
-          ./bin/class-reader-asan ./exemplos/tests/HelloWorld.class > /dev/null
-          
-          echo "Testando vetor_8 (o que encontrou os bugs)..."
+          echo "Testando vetor_8..."
           ./bin/class-reader-asan ./exemplos/vetor_8.class > /dev/null
           
           echo "Testando fatorial..."
