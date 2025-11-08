@@ -85,6 +85,17 @@ enum tag {
     CONSTANT_InvokeDynamic      = (u1) 18
 };
 
+enum array_type {
+    T_BOOLEAN = (u1) 4,
+    T_CHAR    = (u1) 5,
+    T_FLOAT   = (u1) 6,
+    T_DOUBLE  = (u1) 7,
+    T_BYTE    = (u1) 8,
+    T_SHORT   = (u1) 9,
+    T_INT     = (u1) 10,
+    T_LONG    = (u1) 11
+};
+
 
 // Structs do Constant Pool Info
 typedef struct CONSTANT_Class_info {
@@ -283,7 +294,7 @@ typedef struct stack_map_frame {
             // u1 frame_type; /* = SAME_LOCALS_1_STACK_ITEM_FRAME_EXTENDED (247) */
             u2 offset_delta;
             verification_type_info** stack;
-        };
+        } same_locals_1_stack_item_frame_extended;
 
         struct {
             // u1 frame_type; /* = CHOP_FRAME (248-250) */

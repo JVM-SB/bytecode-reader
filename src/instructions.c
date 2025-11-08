@@ -249,37 +249,3 @@ const instr_data instruction_data[totalEnumOpCodes] = {
     [goto_w]            = {"goto_w", 4},
     [jsr_w]             = {"jsr_w", 4} 
 };
-
-instruction* buildInstructions(void) {
-    instruction *instructions = calloc(totalEnumOpCodes, sizeof(instruction));
-    if (instructions == NULL) {
-        return NULL;
-    }
-
-    for (u1 idx = 0; idx < totalEnumOpCodes; idx++) {
-        const char* name = instruction_data[idx].name;
-
-        if (name != NULL) {
-            instructions[idx].name = name;
-            instructions[idx].opcode = idx;
-            instructions[idx].num_arguments = instruction_data[idx].num_arguments;
-        
-            if (instructions[idx].num_arguments > 0) {
-                instructions[idx].argument_type = calloc(instructions[idx].num_arguments, sizeof(u4));
-                
-                if (instructions[idx].argument_type == NULL) {
-                    return NULL;
-                }
-            } else {
-                instructions[idx].argument_type = NULL;
-            }
-        } else {
-            instructions[idx].name = "unknown";
-            instructions[idx].opcode = UINT8_MAX;
-            instructions[idx].num_arguments = UINT8_MAX;
-            instructions[idx].argument_type = NULL;
-        }
-    } 
-
-    return instructions;
-}

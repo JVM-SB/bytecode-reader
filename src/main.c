@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "reader.h"
+
 #include "displayer.h"
+#include "reader.h"
 
 
 int main(int argc, char *argv[]) {
@@ -15,9 +16,11 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Erro ao ler o arquivo de classe.\n");
         return 1;
     }
+    
     printf("Arquivo de classe lido com sucesso: %s\n\n", argv[1]);
     printf("---- Início do Display ----\n");
     displayClassFile(cf);
+
     freeClassFile(cf);
 
     return 0;
