@@ -3,7 +3,7 @@ name: CI Build e Análise Estática/Dinâmica
 on:
   push:
     branches: [ "main" ]
-
+    
   pull_request:
     branches: [ "main" ]
 
@@ -12,28 +12,38 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Faz o checkout do código do seu repositório
       - name: Checkout do Repositório
         uses: actions/checkout@v4
 
+      # 2. Instala as dependências (make, gcc, cppcheck)
       - name: Instalar Dependências
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential cppcheck
 
-      # --error-exitcode=1 faz o job falhar se o cppcheck encontrar erros
+      # 3. Análise Estática
       - name: Análise Estática (cppcheck)
-        run: |
-          cppcheck --enable=all --suppress=missingIncludeSystem --error-exitcode=1 .
+        run: make check
 
-      # -g: Adiciona símbolos de debug (essencial para o AddressSanitizer)
-      - name: Compilar com C99 e AddressSanitizer
-        run: |
-          gcc -std=c99 -Wall -Wextra -g -fsanitize=address -o class-reader \
-            main.c \
-            reader.c \
-            instructions.c \
-            displayer.c
+      # 4. Análise Dinâmica
+      - name: Compilar com AddressSanitizer
+        run: make asan
 
-      - name: Análise Dinâmica (Run with AddressSanitizer)
+      # 5. Análise Dinâmica (executando o binário ASan)
+      - name: Análise Dinâmica (Run with ASan)
         run: |
-          ./class-reader ./exemplos/tests/HelloWorld.class || true
+          echo "Testando HelloWorld..."
+          ./bin/class-reader-asan ./exemplos/tests/HelloWorld.class > /dev/null
+          
+          echo "Testando vetor_8 (o que encontrou os bugs)..."
+          ./bin/class-reader-asan ./exemplos/vetor_8.class > /dev/null
+          
+          echo "Testando fatorial..."
+          ./bin/class-reader-asan ./exemplos/fatorial.class > /dev/null
+          
+          echo "Testando lookupswitch..."
+          ./bin/class-reader-asan ./exemplos/lookupswitch.class > /dev/null
+
+          echo "Testando double_aritmetica..."
+          ./bin/class-reader-asan ./exemplos/double_aritmetica.class > /dev/null

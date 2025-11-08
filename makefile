@@ -93,7 +93,7 @@ asan: $(BIN_DIR) $(BUILD_DIR)
 # Executa o analisador estático cppcheck
 check:
 	@echo "Executando cppcheck em todo o projeto..."
-	cppcheck --enable=all --suppress=missingIncludeSystem --check-level=exhaustive -I$(INC_DIR) $(SRCS_BASE:%=$(SRC_DIR)/%)
+	cppcheck --enable=all --suppress=missingIncludeSystem --check-level=exhaustive --error-exitcode=1 -I$(INC_DIR) $(SRCS_BASE:%=$(SRC_DIR)/%)
 
 # Define regras que não geram arquivos
 .PHONY: all clean asan check
