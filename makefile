@@ -3,37 +3,47 @@
 # Compilador
 CC = gcc
 
-# Diretórios
+# --- Diretórios ---
 SRC_DIR = src
-INC_DIR = src
+INC_DIR = include
+BUILD_DIR = build
+BIN_DIR = bin
 
-# Flags do C: Padrão C99, warnings, debug, e o caminho dos headers (-I)
+# --- Flags de Compilação ---
+# Padrão C99, warnings, debug, e o caminho dos headers (-I)
 CFLAGS = -std=c99 -Wall -Wextra -g -I$(INC_DIR)
 
 # Flags para o AddressSanitizer (ASAN)
 CFLAGS_ASAN = $(CFLAGS) -fsanitize=address
 
-# Arquivos fonte .c (apenas os nomes base)
-SRCS = main.c reader.c instructions.c displayer.c
+# Bibliotecas (ex: -lm para a biblioteca de matemática)
+LIBS = -lm
 
-# Arquivos objeto .o (serão criados na raiz)
-OBJS = $(SRCS:.c=.o)
+# --- Gestão de Ficheiros ---
+
+# Arquivos fonte .c (nomes base)
+SRCS_BASE = main.c reader.c instructions.c displayer.c attributes_reader.c
+
+# Mapeia os .c para os caminhos completos dos ficheiros objeto em build/
+OBJS = $(SRCS_BASE:%.c=$(BUILD_DIR)/%.o)
 
 
 # --- Nomes dos Alvos (Executáveis) ---
+TARGET_NAME = class-reader
+TARGET = $(BIN_DIR)/$(TARGET_NAME)
 
-# Nome do executável principal
-TARGET = class-reader
+ASAN_TARGET = $(BIN_DIR)/$(TARGET_NAME)-asan
+
 
 # Ferramentas de limpeza (RM = remove)
 RM = rm -f
 
-# --- Detecção de OS ---
+
+# --- Deteção de OS (para .exe e 'del') ---
 ifeq ($(OS),Windows_NT)
 	TARGET := $(TARGET).exe
+	ASAN_TARGET := $(ASAN_TARGET).exe
 	RM = del /Q /F
-else
-	LIBS = -lm
 endif
 
 
@@ -43,35 +53,47 @@ endif
 all: $(TARGET)
 
 # Regra para linkar o executável final
-$(TARGET): $(OBJS)
+# Depende que o diretório $(BIN_DIR) e todos os objetos $(OBJS) existam
+$(TARGET): $(BIN_DIR) $(OBJS)
 	$(CC) $(CFLAGS) -o $(TARGET) $(OBJS) $(LIBS)
-	@echo "Executável '$(TARGET)' criado na raiz do projeto."
+	@echo "Executável '$(TARGET)' criado com sucesso."
 
-# Regra para compilar cada .o a partir de um .c
-# $< é o arquivo .c
-# $@ é o arquivo .o
-%.o: $(SRC_DIR)/%.c
+# Regra para compilar cada .o a partir de um .c e colocá-lo no BUILD_DIR
+# Ex: compila "src/main.c" para "build/main.o"
+# A dependência "| $(BUILD_DIR)" garante que o diretório existe antes de compilar
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Remove os arquivos compilados da raiz
+# A regra $(TARGET) e a regra de compilação dependem disto
+$(BUILD_DIR) $(BIN_DIR):
+	mkdir -p $@
+
+
+# --- Regras de Limpeza e Análise ---
+
+# Remove os ficheiros compilados de 'bin' e 'build'
 clean:
-	$(RM) $(TARGET) $(OBJS)
-	$(RM) $(TARGET)_asan.exe $(TARGET)_asan
-	@echo "Arquivos compilados removidos."
+	$(RM) $(TARGET)
+	$(RM) $(ASAN_TARGET)
+ifeq ($(OS),Windows_NT)
+	$(RM) $(BUILD_DIR)\\*.o
+	@echo "Arquivos compilados removidos de $(BIN_DIR) e $(BUILD_DIR)."
+else
+	$(RM) $(BUILD_DIR)/*.o
+	@echo "Arquivos compilados removidos de $(BIN_DIR) e $(BUILD_DIR)."
+endif
 
-
-# --- Regras de Análise (Bônus) ---
 
 # Compila uma versão com AddressSanitizer
-asan:
-	# $(SRCS:%=$(SRC_DIR)/%) expande para "src/main.c src/reader.c ..."
-	$(CC) $(CFLAGS_ASAN) -o $(TARGET)_asan $(SRCS:%=$(SRC_DIR)/%) $(LIBS)
-	@echo "Compilado com AddressSanitizer. Execute: ./$(TARGET)_asan <arquivo.class>"
+asan: $(BIN_DIR) $(BUILD_DIR)
+	$(CC) $(CFLAGS_ASAN) -o $(ASAN_TARGET) $(SRCS_BASE:%=$(SRC_DIR)/%) $(LIBS)
+	@echo "Compilado com AddressSanitizer. Execute: ./$(ASAN_TARGET) <arquivo.class>"
 
-# Executa o analisador estático cppcheck no diretório src
+
+# Executa o analisador estático cppcheck
 check:
-	@echo "Executando cppcheck em $(SRC_DIR)..."
-	cppcheck --enable=all --suppress=missingIncludeSystem --check-level=exhaustive $(SRC_DIR)
+	@echo "Executando cppcheck em todo o projeto..."
+	cppcheck --enable=all --suppress=missingIncludeSystem --check-level=exhaustive -I$(INC_DIR) $(SRCS_BASE:%=$(SRC_DIR)/%)
 
 # Define regras que não geram arquivos
 .PHONY: all clean asan check
