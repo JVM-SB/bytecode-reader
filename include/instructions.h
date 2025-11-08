@@ -5,12 +5,6 @@
 
 #include "classfile.h"
 
-typedef struct instruction {
-    const char *name;
-    u1 opcode;
-    u1 num_arguments;
-    u4 *argument_type;
-} instruction;
 
 typedef struct instr_data{
     const char *name;
@@ -19,8 +13,6 @@ typedef struct instr_data{
 
 
 extern const instr_data instruction_data[totalEnumOpCodes];
-
-instruction* buildInstructions(void);
 
 typedef enum instructions_opcode {
     nop                 = 0x00,
