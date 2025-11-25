@@ -192,6 +192,8 @@ void isub_impl(Frame *frame) {
     u4 result = value1 - value2;
 
     pushOperand(frame, result);
+
+    printf("ISUB FEITO: %u - %u = %u", value1, value2, result);
 }
 
 void imul_impl(Frame *frame) {
