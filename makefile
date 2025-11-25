@@ -21,11 +21,11 @@ LIBS = -lm
 
 # --- Gestão de Ficheiros ---
 
-# Arquivos fonte .c (nomes base)
-SRCS_BASE = main.c reader.c instructions.c displayer.c attributes_reader.c
+# Arquivos fonte .c (nomes base
+SRCS = $(wildcard $(SRC_DIR)/*.c)
 
 # Mapeia os .c para os caminhos completos dos ficheiros objeto em build/
-OBJS = $(SRCS_BASE:%.c=$(BUILD_DIR)/%.o)
+OBJS = $(patsubst $(SRC_DIR)/%.c, $(BUILD_DIR)/%.o, $(SRCS))
 
 
 # --- Nomes dos Alvos (Executáveis) ---
@@ -41,9 +41,9 @@ RM = rm -f
 
 # --- Deteção de OS (para .exe e 'del') ---
 ifeq ($(OS),Windows_NT)
-	TARGET := $(TARGET).exe
-	ASAN_TARGET := $(ASAN_TARGET).exe
-	RM = del /Q /F
+    TARGET := $(TARGET).exe
+    ASAN_TARGET := $(ASAN_TARGET).exe
+    RM = del /Q /F
 endif
 
 
@@ -64,7 +64,7 @@ $(TARGET): $(BIN_DIR) $(OBJS)
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# A regra $(TARGET) e a regra de compilação dependem disto
+# Criação dos diretórios bin e build se não existirem
 $(BUILD_DIR) $(BIN_DIR):
 	mkdir -p $@
 
@@ -86,14 +86,14 @@ endif
 
 # Compila uma versão com AddressSanitizer
 asan: $(BIN_DIR) $(BUILD_DIR)
-	$(CC) $(CFLAGS_ASAN) -o $(ASAN_TARGET) $(SRCS_BASE:%=$(SRC_DIR)/%) $(LIBS)
+	$(CC) $(CFLAGS_ASAN) -o $(ASAN_TARGET) $(SRCS) $(LIBS)
 	@echo "Compilado com AddressSanitizer. Execute: ./$(ASAN_TARGET) <arquivo.class>"
 
 
 # Executa o analisador estático cppcheck
 check:
 	@echo "Executando cppcheck em todo o projeto..."
-	cppcheck --enable=all --suppress=missingIncludeSystem --check-level=exhaustive --error-exitcode=1 -I$(INC_DIR) $(SRCS_BASE:%=$(SRC_DIR)/%)
+	cppcheck --enable=all --suppress=missingIncludeSystem --check-level=exhaustive --error-exitcode=1 -I$(INC_DIR) $(SRCS)
 
 # Define regras que não geram arquivos
 .PHONY: all clean asan check
