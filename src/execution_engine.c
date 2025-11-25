@@ -1,0 +1,97 @@
+#include <stdio.h>
+
+#include "execution_engine.h"
+#include "instructions.h"
+#include "instructions_impl.h"
+
+// Vetor de Ponteiros de Função Global
+instruction_func instructions[256];
+
+void initExecutionEngine() {
+    for (int i = 0; i < 256; i++) {
+        instructions[i] = unimpl;
+    }
+
+    instructions[nop]         = nop_impl;
+    instructions[aconst_null] = aconst_null_impl;
+
+    instructions[iconst_m1] = iconst_m1_impl;
+    instructions[iconst_0]  = iconst_0_impl;
+    instructions[iconst_1]  = iconst_1_impl;
+    instructions[iconst_2]  = iconst_2_impl;
+    instructions[iconst_3]  = iconst_3_impl;
+    instructions[iconst_4]  = iconst_4_impl;
+    instructions[iconst_5]  = iconst_5_impl;
+
+    instructions[lconst_0]  = lconst_0_impl;
+    instructions[lconst_1]  = lconst_1_impl;
+
+    instructions[bipush]    = bipush_impl;
+    instructions[sipush]    = sipush_impl;
+
+    instructions[iload]     = iload_impl;
+    instructions[iload_0]   = iload_0_impl;
+    instructions[iload_1]   = iload_1_impl;
+    instructions[iload_2]   = iload_2_impl;
+    instructions[iload_3]   = iload_3_impl;
+
+    instructions[lload]     = lload_impl;
+    instructions[lload_0]   = lload_0_impl;
+    instructions[lload_1]   = lload_1_impl;
+    instructions[lload_2]   = lload_2_impl;
+    instructions[lload_3]   = lload_3_impl;
+
+    instructions[istore]    = istore_impl;
+    instructions[istore_0]  = istore_0_impl;
+    instructions[istore_1]  = istore_1_impl;
+    instructions[istore_2]  = istore_2_impl;
+    instructions[istore_3]  = istore_3_impl;
+
+    instructions[lstore]    = lstore_impl;
+    instructions[lstore_0]  = lstore_0_impl;
+    instructions[lstore_1]  = lstore_1_impl;
+    instructions[lstore_2]  = lstore_2_impl;
+    instructions[lstore_3]  = lstore_3_impl;
+    
+    // TODO: Terminar o vetor de instrução e sua implementação
+
+    // Aritmética (int)
+    instructions[iadd] = iadd_impl;
+    instructions[isub] = isub_impl;
+    instructions[imul] = imul_impl;
+    instructions[idiv] = idiv_impl;
+    instructions[irem] = irem_impl;
+    instructions[ineg] = ineg_impl;
+
+    // Incremento
+    instructions[iinc] = iinc_impl;
+
+    instructions[ladd] = ladd_impl;
+    instructions[lsub] = lsub_impl;
+    instructions[lmul] = lmul_impl;
+    instructions[ldiv_] = ldiv_impl;
+    instructions[lrem] = lrem_impl;
+    instructions[lneg] = lneg_impl;
+
+    instructions[ireturn] = ireturn_impl;
+    instructions[return_] = return_impl;
+}
+
+void execute(JVM *jvm) {
+    while (jvm->current_frame != NULL) {
+        Frame *frame = jvm->current_frame;
+
+        if (frame->pc >= frame->code_length) {
+            fprintf(stderr, "Erro: PC passou do fim do código!");
+            break; 
+        }
+
+        // FETCH
+        u1 opcode = frame->bytecode[frame->pc];
+        frame->pc++; 
+
+        // EXECUTE
+        // Os argumentos são lidos dentro da função da instrução
+        instructions[opcode](frame);
+    }
+}

@@ -248,7 +248,6 @@ static u2* readInterfaces(FILE *file, u2 interfaces_count) {
         return NULL;
     }
 
-    printf("Lendo %u interfaces...\n", interfaces_count);
     u2 *interfaces = malloc(interfaces_count * sizeof(u2));
     if (interfaces == NULL) {
         fprintf(stderr, "Erro ao alocar memória para o array de interfaces.\n");
