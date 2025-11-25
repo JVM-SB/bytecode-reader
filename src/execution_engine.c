@@ -73,8 +73,38 @@ void initExecutionEngine() {
     instructions[lrem] = lrem_impl;
     instructions[lneg] = lneg_impl;
 
+    // Retorno
     instructions[ireturn] = ireturn_impl;
     instructions[return_] = return_impl;
+
+    // Stack Operations
+    instructions[pop]       = pop_impl;
+    instructions[pop2]      = pop2_impl;
+    instructions[dup]       = dup_impl;
+    instructions[dup_x1]    = dup_x1_impl;
+    instructions[dup_x2]    = dup_x2_impl;
+    instructions[dup2]      = dup2_impl;
+    instructions[swap]      = swap_impl;
+
+    // Comparação
+    instructions[lcmp]      = lcmp_impl;
+
+    // Branching (IFs)
+    instructions[ifeq]      = ifeq_impl;
+    instructions[ifne]      = ifne_impl;
+    instructions[iflt]      = iflt_impl;
+    instructions[ifge]      = ifge_impl;
+    instructions[ifgt]      = ifgt_impl;
+    instructions[ifle]      = ifle_impl;
+
+    instructions[if_icmpeq] = if_icmpeq_impl;
+    instructions[if_icmpne] = if_icmpne_impl;
+    instructions[if_icmplt] = if_icmplt_impl;
+    instructions[if_icmpge] = if_icmpge_impl;
+    instructions[if_icmpgt] = if_icmpgt_impl;
+    instructions[if_icmple] = if_icmple_impl;
+
+    instructions[goto_]     = goto_impl;
 }
 
 void execute(JVM *jvm) {

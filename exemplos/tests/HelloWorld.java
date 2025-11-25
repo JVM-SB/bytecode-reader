@@ -1,9 +1,14 @@
 public class HelloWorld {
 
     public static void main(String[] args) {
-        int a = 10;
-        int b = 5;
-        int c; 
-        c = a - b;
+        int c;
+        c = 0;
+        for (int i = 0; i < 5; i++) {
+            c = i;
+            c++;
+            if (c == 3) {
+                break;
+            }
+        }   
     }
 }

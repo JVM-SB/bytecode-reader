@@ -76,4 +76,35 @@ void lneg_impl(Frame *frame);
 void return_impl(Frame *frame);
 void ireturn_impl(Frame *frame);
 
+// STACK
+void pop_impl(Frame *frame);
+void pop2_impl(Frame *frame);
+void dup_impl(Frame *frame);
+void dup_x1_impl(Frame *frame);
+void dup_x2_impl(Frame *frame);
+void dup2_impl(Frame *frame);
+void dup2_x1_impl(Frame *frame);
+void dup2_x2_impl(Frame *frame);
+void swap_impl(Frame *frame);
+
+// COMPARE
+void lcmp_impl(Frame *frame);
+
+// BRANCH
+void ifeq_impl(Frame *frame);
+void ifne_impl(Frame *frame);
+void iflt_impl(Frame *frame);
+void ifge_impl(Frame *frame);
+void ifgt_impl(Frame *frame);
+void ifle_impl(Frame *frame);
+void if_icmpeq_impl(Frame *frame);
+void if_icmpne_impl(Frame *frame);
+void if_icmplt_impl(Frame *frame);
+void if_icmpge_impl(Frame *frame);
+void if_icmpgt_impl(Frame *frame);
+void if_icmple_impl(Frame *frame);
+void if_acmpeq_impl(Frame *frame);
+void if_acmpne_impl(Frame *frame);
+void goto_impl(Frame *frame);
+
 #endif // INSTRUCTIONS_IMPL_H

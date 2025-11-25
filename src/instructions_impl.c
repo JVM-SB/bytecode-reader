@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-
 #include "instructions_impl.h"
 
 #define READ_U1(f) (f->bytecode[f->pc++])
@@ -347,7 +346,7 @@ void return_impl(Frame *frame) {
 // Return com valor inteiro
 void ireturn_impl(Frame *frame) {
     u4 return_value = popOperand(frame);
-
+    printf(" >> IRETURN: %d\n", return_value); // Debug temporário
     JVM *jvm = frame->jvm_ref;
     Frame * prev_frame = frame->previous;
 
@@ -357,4 +356,168 @@ void ireturn_impl(Frame *frame) {
 
     jvm->current_frame = prev_frame;
     deleteFrame(frame);
+}
+
+// Instruções de Pilha
+
+void pop_impl(Frame *frame) {
+    popOperand(frame);
+}
+
+void pop2_impl(Frame *frame) {
+    popOperand(frame);
+    popOperand(frame);
+}
+
+void dup_impl(Frame *frame) {
+    u4 value = peekOperand(frame);
+    pushOperand(frame, value);
+}
+
+void dup_x1_impl(Frame *frame) {
+    u4 value1 = popOperand(frame);
+    u4 value2 = popOperand(frame);
+
+    pushOperand(frame, value1);
+    pushOperand(frame, value2);
+    pushOperand(frame, value1);
+}
+
+void dup_x2_impl(Frame *frame) {
+    u4 value1 = popOperand(frame);
+    u4 value2 = popOperand(frame);
+    u4 value3 = popOperand(frame);
+
+    pushOperand(frame, value1);
+    pushOperand(frame, value3);
+    pushOperand(frame, value2);
+    pushOperand(frame, value1);
+}
+
+void dup2_impl(Frame *frame) {
+    u4 v1 = popOperand(frame);
+    u4 v2 = peekOperand(frame);
+    // desempilha tudo e empilha de volta
+    u4 v2_val = popOperand(frame);
+    
+    pushOperand(frame, v2_val);
+    pushOperand(frame, v1);
+    pushOperand(frame, v2_val);
+    pushOperand(frame, v1);
+}
+
+void swap_impl(Frame *frame) {
+    u4 value1 = popOperand(frame);
+    u4 value2 = popOperand(frame);
+
+    pushOperand(frame, value1);
+    pushOperand(frame, value2);
+}
+
+// Instruções de Comparação
+
+void lcmp_impl(Frame *frame) {
+    u8 v2 = popLong(frame);
+    u8 v1 = popLong(frame);
+    
+    if ((int64_t)v1 > (int64_t)v2) pushOperand(frame, 1);
+    else if ((int64_t)v1 < (int64_t)v2) pushOperand(frame, -1); // Representação de -1 em u4
+    else pushOperand(frame, 0);
+}
+
+// Instruções de Desvio
+
+// Auxiliar para calcular salto
+static void branch(Frame *frame, int16_t offset) {
+    // O PC atual aponta para DEPOIS dos argumentos da instrução de branch.
+    // O offset é relativo ao opcode da instrução de branch.
+    // Como os branchs (if, goto) têm 2 bytes de offset + 1 byte opcode = 3 bytes.
+    // pc_opcode = frame->pc - 3;
+    // novo_pc = pc_opcode + offset;
+    printf(" >> BRANCH de PC %u para offset %+d (novo PC: %u)\n", frame->pc - 3, offset, (frame->pc - 3) + offset); // DEBUG
+    u4 pc_opcode = frame->pc - 3;
+    frame->pc = pc_opcode + offset;
+}
+
+void ifeq_impl(Frame *frame) {
+    int16_t offset = READ_U2(frame);
+    u4 val = popOperand(frame);
+    if ((int32_t)val == 0) branch(frame, offset);
+}
+
+void ifne_impl(Frame *frame) {
+    int16_t offset = READ_U2(frame);
+    u4 val = popOperand(frame);
+    if ((int32_t)val != 0) branch(frame, offset);
+}
+
+void iflt_impl(Frame *frame) {
+    int16_t offset = READ_U2(frame);
+    u4 val = popOperand(frame);
+    if ((int32_t)val < 0) branch(frame, offset);
+}
+
+void ifge_impl(Frame *frame) {
+    int16_t offset = READ_U2(frame);
+    u4 val = popOperand(frame);
+    if ((int32_t)val >= 0) branch(frame, offset);
+}
+
+void ifgt_impl(Frame *frame) {
+    int16_t offset = READ_U2(frame);
+    u4 val = popOperand(frame);
+    if ((int32_t)val > 0) branch(frame, offset);
+}
+
+void ifle_impl(Frame *frame) {
+    int16_t offset = READ_U2(frame);
+    u4 val = popOperand(frame);
+    if ((int32_t)val <= 0) branch(frame, offset);
+}
+
+void if_icmpeq_impl(Frame *frame) {
+    int16_t offset = READ_U2(frame);
+    u4 v2 = popOperand(frame);
+    u4 v1 = popOperand(frame);
+    if ((int32_t)v1 == (int32_t)v2) branch(frame, offset);
+}
+
+void if_icmpne_impl(Frame *frame) {
+    int16_t offset = READ_U2(frame);
+    u4 v2 = popOperand(frame);
+    u4 v1 = popOperand(frame);
+    if ((int32_t)v1 != (int32_t)v2) branch(frame, offset);
+}
+
+void if_icmplt_impl(Frame *frame) {
+    int16_t offset = READ_U2(frame);
+    u4 v2 = popOperand(frame);
+    u4 v1 = popOperand(frame);
+    if ((int32_t)v1 < (int32_t)v2) branch(frame, offset);
+}
+
+void if_icmpge_impl(Frame *frame) {
+    int16_t offset = READ_U2(frame);
+    u4 v2 = popOperand(frame);
+    u4 v1 = popOperand(frame);
+    if ((int32_t)v1 >= (int32_t)v2) branch(frame, offset);
+}
+
+void if_icmpgt_impl(Frame *frame) {
+    int16_t offset = READ_U2(frame);
+    u4 v2 = popOperand(frame);
+    u4 v1 = popOperand(frame);
+    if ((int32_t)v1 > (int32_t)v2) branch(frame, offset);
+}
+
+void if_icmple_impl(Frame *frame) {
+    int16_t offset = READ_U2(frame);
+    u4 v2 = popOperand(frame);
+    u4 v1 = popOperand(frame);
+    if ((int32_t)v1 <= (int32_t)v2) branch(frame, offset);
+}
+
+void goto_impl(Frame *frame) {
+    int16_t offset = READ_U2(frame);
+    branch(frame, offset);
 }
