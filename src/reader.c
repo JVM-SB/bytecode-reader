@@ -204,10 +204,11 @@ static cp_info* readConstantPool(FILE *file, u2 cp_count) {
             case CONSTANT_Utf8:
                 cp[i].info.utf8_info.length = u2Read(file);
 
-                cp[i].info.utf8_info.bytes = malloc(cp[i].info.utf8_info.length * sizeof(u1));
+                // ALOCAÇÃO: +1 byte para o caractere nulo '\0'
+                cp[i].info.utf8_info.bytes = malloc((cp[i].info.utf8_info.length + 1) * sizeof(u1));
+                
                 if (cp[i].info.utf8_info.bytes == NULL) {
                     fprintf(stderr, "Erro ao alocar bytes do CONSTANT_Utf8_info.\n");
-
                     free(cp);
                     return NULL;
                 }
@@ -215,6 +216,10 @@ static cp_info* readConstantPool(FILE *file, u2 cp_count) {
                 for (int j = 0; j < cp[i].info.utf8_info.length; j++) {
                     cp[i].info.utf8_info.bytes[j] = u1Read(file);
                 }
+                
+                // FINALIZAÇÃO: Adiciona o terminador nulo manualmente
+                cp[i].info.utf8_info.bytes[cp[i].info.utf8_info.length] = '\0';
+                
                 break;
             
             case CONSTANT_MethodHandle:

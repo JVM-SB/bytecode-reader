@@ -390,7 +390,7 @@ void displayClassFile(const ClassFile *cf) {
             break;
         default:
             printf("Versão java não compatível.\n");
-            exit(1);
+            break;
     }
     printf("Contador do Pool de Constantes: %.0f\n", (float) cf->constant_pool_count);
     printf("Flag de Acesso: ");

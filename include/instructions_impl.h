@@ -39,6 +39,17 @@ void lload_1_impl(Frame *frame);
 void lload_2_impl(Frame *frame);
 void lload_3_impl(Frame *frame);
 
+void dload_impl(Frame *frame);
+void dload_0_impl(Frame *frame);
+void dload_1_impl(Frame *frame);
+void dload_2_impl(Frame *frame);
+void dload_3_impl(Frame *frame);
+
+void fload_impl(Frame *frame);
+void fload_0_impl(Frame *frame);
+void fload_1_impl(Frame *frame);
+void fload_2_impl(Frame *frame);
+void fload_3_impl(Frame *frame);
 
 // STORE (Guardar da Pilha para Locais)
 void istore_impl(Frame *frame);
@@ -53,6 +64,17 @@ void lstore_1_impl(Frame *frame);
 void lstore_2_impl(Frame *frame);
 void lstore_3_impl(Frame *frame);
 
+void dstore_impl(Frame *frame);
+void dstore_0_impl(Frame *frame);
+void dstore_1_impl(Frame *frame);
+void dstore_2_impl(Frame *frame);
+void dstore_3_impl(Frame *frame);
+
+void fstore_impl(Frame *frame);
+void fstore_0_impl(Frame *frame);
+void fstore_1_impl(Frame *frame);
+void fstore_2_impl(Frame *frame);
+void fstore_3_impl(Frame *frame);
 
 // Aritmética (int)
 void iadd_impl(Frame *frame);
@@ -106,5 +128,14 @@ void if_icmple_impl(Frame *frame);
 void if_acmpeq_impl(Frame *frame);
 void if_acmpne_impl(Frame *frame);
 void goto_impl(Frame *frame);
+
+// Métodos de invocação
+void getstatic_impl(Frame *frame);
+void invokestatic_impl(Frame *frame);
+void invokevirtual_impl(Frame *frame);
+
+// LDC
+void ldc_impl(Frame *frame);
+void ldc2_w_impl(Frame *frame);
 
 #endif // INSTRUCTIONS_IMPL_H

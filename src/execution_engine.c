@@ -41,6 +41,18 @@ void initExecutionEngine() {
     instructions[lload_2]   = lload_2_impl;
     instructions[lload_3]   = lload_3_impl;
 
+    instructions[dload]     = dload_impl;
+    instructions[dload_0]   = dload_0_impl;
+    instructions[dload_1]   = dload_1_impl;
+    instructions[dload_2]   = dload_2_impl;
+    instructions[dload_3]   = dload_3_impl;
+
+    instructions[fload]     = fload_impl;
+    instructions[fload_0]   = fload_0_impl;
+    instructions[fload_1]   = fload_1_impl;
+    instructions[fload_2]   = fload_2_impl;
+    instructions[fload_3]   = fload_3_impl;
+
     instructions[istore]    = istore_impl;
     instructions[istore_0]  = istore_0_impl;
     instructions[istore_1]  = istore_1_impl;
@@ -52,7 +64,19 @@ void initExecutionEngine() {
     instructions[lstore_1]  = lstore_1_impl;
     instructions[lstore_2]  = lstore_2_impl;
     instructions[lstore_3]  = lstore_3_impl;
-    
+
+    instructions[dstore]    = dstore_impl;
+    instructions[dstore_0]  = dstore_0_impl;
+    instructions[dstore_1]  = dstore_1_impl;
+    instructions[dstore_2]  = dstore_2_impl;
+    instructions[dstore_3]  = dstore_3_impl;
+
+    instructions[fstore]    = fstore_impl;
+    instructions[fstore_0]  = fstore_0_impl;
+    instructions[fstore_1]  = fstore_1_impl;
+    instructions[fstore_2]  = fstore_2_impl;
+    instructions[fstore_3]  = fstore_3_impl;
+
     // TODO: Terminar o vetor de instrução e sua implementação
 
     // Aritmética (int)
@@ -105,6 +129,16 @@ void initExecutionEngine() {
     instructions[if_icmple] = if_icmple_impl;
 
     instructions[goto_]     = goto_impl;
+
+
+    // Instruções de Invocação e Campo Estático
+    instructions[getstatic]     = getstatic_impl;
+    instructions[invokestatic]  = invokestatic_impl;
+    instructions[invokevirtual] = invokevirtual_impl;
+
+    // LDC
+    instructions[ldc]       = ldc_impl;
+    instructions[ldc2_w]    = ldc2_w_impl;
 }
 
 void execute(JVM *jvm) {
