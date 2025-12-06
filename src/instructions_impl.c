@@ -272,8 +272,6 @@ void iadd_impl(Frame *frame) {
     u4 result = value1 + value2;
 
     pushOperand(frame, result);
-
-    printf("IADD FEITO: %u + %u = %u", value1, value2, result);
 }
 
 void isub_impl(Frame *frame) {
@@ -283,8 +281,6 @@ void isub_impl(Frame *frame) {
     u4 result = value1 - value2;
 
     pushOperand(frame, result);
-
-    printf("ISUB FEITO: %u - %u = %u", value1, value2, result);
 }
 
 void imul_impl(Frame *frame) {
@@ -582,7 +578,6 @@ void return_impl(Frame *frame) {
 // Return com valor inteiro
 void ireturn_impl(Frame *frame) {
     u4 return_value = popOperand(frame);
-    printf(" >> IRETURN: %d\n", return_value); // Debug temporário
     JVM *jvm = frame->jvm_ref;
     Frame * prev_frame = frame->previous;
 
@@ -598,7 +593,6 @@ void ireturn_impl(Frame *frame) {
 
 void lreturn_impl(Frame *frame) {
     u8 return_value = popLong(frame);
-    printf(" >> LRETURN: %lld\n", (long long)return_value); // Debug temporário
     JVM *jvm = frame->jvm_ref;
     Frame * prev_frame = frame->previous;
 
@@ -615,7 +609,6 @@ void lreturn_impl(Frame *frame) {
 void dreturn_impl(Frame *frame) {
     u8 return_value = popLong(frame);
     double dvalue = *(double*)&return_value;
-    printf(" >> DRETURN: %f\n", dvalue); // Debug temporário
     JVM *jvm = frame->jvm_ref;
     Frame * prev_frame = frame->previous;
 
@@ -632,7 +625,6 @@ void dreturn_impl(Frame *frame) {
 void freturn_impl(Frame *frame) {
     u4 return_value = popOperand(frame);
     float fvalue = *(float*)&return_value;
-    printf(" >> FRETURN: %f\n", fvalue); // Debug temporário
     JVM *jvm = frame->jvm_ref;
     Frame * prev_frame = frame->previous;
 
