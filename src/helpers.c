@@ -26,11 +26,12 @@ int constantPoolStringIsEqual(const ClassFile *cf, u2 index, const char *str) {
     return (strncmp(entryStr, str, length) == 0);
 }
 
-method_info* findMethod(const ClassFile *cf, const char *name) {
-    for (int i = 0; i < cf->methods_count; i++) {
+method_info* findMethod(const ClassFile *cf, const char *name, const char *descriptor) {
+     for (int i = 0; i < cf->methods_count; i++) {
         method_info *method = &cf->methods[i];
 
-        if(constantPoolStringIsEqual(cf, method->name_index, name )) {
+        if(constantPoolStringIsEqual(cf, method->name_index, name ) &&
+           constantPoolStringIsEqual(cf, method->descriptor_index, descriptor)) {
             return method;
         }
     }

@@ -87,9 +87,23 @@ void initExecutionEngine() {
     instructions[irem] = irem_impl;
     instructions[ineg] = ineg_impl;
 
-    // Incremento
-    instructions[iinc] = iinc_impl;
+    // Aritmética (float)
+    instructions[fadd] = fadd_impl;
+    instructions[fsub] = fsub_impl;
+    instructions[fmul] = fmul_impl;
+    instructions[fdiv] = fdiv_impl;
+    instructions[frem] = frem_impl;
+    instructions[fneg] = fneg_impl;
 
+    // Aritmética (double)
+    instructions[dadd] = dadd_impl;
+    instructions[dsub] = dsub_impl;
+    instructions[dmul] = dmul_impl;
+    instructions[ddiv] = ddiv_impl;
+    instructions[drem] = drem_impl;
+    instructions[dneg] = dneg_impl;
+
+    // Aritmética (long)
     instructions[ladd] = ladd_impl;
     instructions[lsub] = lsub_impl;
     instructions[lmul] = lmul_impl;
@@ -97,9 +111,15 @@ void initExecutionEngine() {
     instructions[lrem] = lrem_impl;
     instructions[lneg] = lneg_impl;
 
+    // Incremento
+    instructions[iinc] = iinc_impl;
+
     // Retorno
     instructions[ireturn] = ireturn_impl;
     instructions[return_] = return_impl;
+    instructions[lreturn] = lreturn_impl;
+    instructions[dreturn] = dreturn_impl;
+    instructions[freturn] = freturn_impl;
 
     // Stack Operations
     instructions[pop]       = pop_impl;

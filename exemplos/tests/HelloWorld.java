@@ -1,18 +1,19 @@
 public class HelloWorld {
+
+    public static double add(double a, double b) {
+        return a + b;
+    }
     
     public static int add(int a, int b) {
         return a + b;
     }
+
+    public static long add(long a, long b) {
+        return a + b;
+    }
     public static void main(String[] args) {
-        int p = 5 + 10;
-        long bigNumber = 123456789L;
-        double decimalNumber = 5.5;
-        float floatNumber = 3.4f;
-        System.out.println(add(p, 5));
-        System.out.println("Hello, World!");
-        System.out.println(true);
-        System.out.println(bigNumber);   
-        System.out.println(decimalNumber);
-        System.out.println(floatNumber);
+        System.out.println(add(5, 5));
+        System.out.println(add(5.5, 5.5));
+        System.out.println(add(10L, 20L));
     }
 }

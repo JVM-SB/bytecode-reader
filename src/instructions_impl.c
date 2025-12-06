@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -342,7 +343,7 @@ void iinc_impl(Frame *frame) {
     frame->local_variables[index] = (u4) value;
 }
 
-// LONGS
+// POP e PUSH para long (u8)
 static u8 popLong(Frame *frame) {
     u4 low = popOperand(frame);
     u4 high = popOperand(frame);
@@ -358,7 +359,152 @@ static void pushLong(Frame *frame, u8 value) {
     pushOperand(frame, low);
 }
 
-void ladd_impl(Frame *frame) {
+// Aritmética (double)
+void dadd_impl(Frame *frame) {
+    u8 value2 = popLong(frame);
+    u8 value1 = popLong(frame);
+    double dvalue1 = *(double*)&value1;
+    double dvalue2 = *(double*)&value2;
+    double dresult = dvalue1 + dvalue2;
+    u8 result = *(u8*)&dresult;
+    pushLong(frame, result);
+}
+
+void dsub_impl(Frame *frame) {
+    u8 value2 = popLong(frame);
+    u8 value1 = popLong(frame);
+    double dvalue1 = *(double*)&value1;
+    double dvalue2 = *(double*)&value2;
+    double dresult = dvalue1 - dvalue2;
+    u8 result = *(u8*)&dresult;
+    pushLong(frame, result);
+}
+
+void dmul_impl(Frame *frame) {
+    u8 value2 = popLong(frame);
+    u8 value1 = popLong(frame);
+    double dvalue1 = *(double*)&value1;
+    double dvalue2 = *(double*)&value2;
+    double dresult = dvalue1 * dvalue2;
+    u8 result = *(u8*)&dresult;
+    pushLong(frame, result);
+}
+
+void ddiv_impl(Frame *frame) {
+    u8 value2 = popLong(frame);
+    u8 value1 = popLong(frame);
+    double dvalue1 = *(double*)&value1;
+    double dvalue2 = *(double*)&value2;
+
+    if (dvalue2 == 0.0) {
+        fprintf(stderr, "Erro: Tentativa de dividir um número por zero (0.0)\n");
+        exit(1);
+    }
+
+    double dresult = dvalue1 / dvalue2;
+    u8 result = *(u8*)&dresult;
+    pushLong(frame, result);
+}
+
+void drem_impl(Frame *frame) {
+    u8 value2 = popLong(frame);
+    u8 value1 = popLong(frame);
+    double dvalue1 = *(double*)&value1;
+    double dvalue2 = *(double*)&value2;
+
+    if (dvalue2 == 0.0) {
+        fprintf(stderr, "Erro: Tentativa de dividir um número por zero (0.0)\n");
+        exit(1);
+    }
+
+    double dresult = fmod(dvalue1, dvalue2);
+    u8 result = *(u8*)&dresult;
+    pushLong(frame, result);
+}
+
+void dneg_impl(Frame *frame) {
+    u8 value = popLong(frame);
+    double dvalue = *(double*)&value;
+    double dresult = -dvalue;
+    u8 result = *(u8*)&dresult;
+    pushLong(frame, result);
+}
+
+// Aritmética (float)
+
+void fadd_impl(Frame *frame) {
+    u4 value2 = popOperand(frame);
+    u4 value1 = popOperand(frame);
+    float fvalue1 = *(float*)&value1;
+    float fvalue2 = *(float*)&value2;
+    float fresult = fvalue1 + fvalue2;
+    u4 result = *(u4*)&fresult;
+    pushOperand(frame, result);
+}
+
+void fsub_impl(Frame *frame) {
+    u4 value2 = popOperand(frame);
+    u4 value1 = popOperand(frame);
+    float fvalue1 = *(float*)&value1;
+    float fvalue2 = *(float*)&value2;
+    float fresult = fvalue1 - fvalue2;
+    u4 result = *(u4*)&fresult;
+    pushOperand(frame, result);
+}
+
+void fmul_impl(Frame *frame) {
+    u4 value2 = popOperand(frame);
+    u4 value1 = popOperand(frame);
+    float fvalue1 = *(float*)&value1;
+    float fvalue2 = *(float*)&value2;
+    float fresult = fvalue1 * fvalue2;
+    u4 result = *(u4*)&fresult;
+    pushOperand(frame, result);
+}
+
+void fdiv_impl(Frame *frame) {
+    u4 value2 = popOperand(frame);
+    u4 value1 = popOperand(frame);
+    float fvalue1 = *(float*)&value1;
+    float fvalue2 = *(float*)&value2;
+
+    if (fvalue2 == 0.0f) {
+        fprintf(stderr, "Erro: Tentativa de dividir um número por zero (0.0f)\n");
+        exit(1);
+    }
+
+    float fresult = fvalue1 / fvalue2;
+    u4 result = *(u4*)&fresult;
+    pushOperand(frame, result);
+}
+
+void frem_impl(Frame *frame) {
+    u4 value2 = popOperand(frame);
+    u4 value1 = popOperand(frame);
+    float fvalue1 = *(float*)&value1;
+    float fvalue2 = *(float*)&value2;
+
+    if (fvalue2 == 0.0f) {
+        fprintf(stderr, "Erro: Tentativa de dividir um número por zero (0.0f)\n");
+        exit(1);
+    }
+
+    float fresult = fmodf(fvalue1, fvalue2);
+    u4 result = *(u4*)&fresult;
+    pushOperand(frame, result);
+}
+
+void fneg_impl(Frame *frame) {
+    u4 value = popOperand(frame);
+    float fvalue = *(float*)&value;
+    float fresult = -fvalue;
+    u4 result = *(u4*)&fresult;
+    pushOperand(frame, result);
+}
+
+// Aritmética (long)
+
+void ladd_impl(Frame *frame){
     u8 value2 = popLong(frame);
     u8 value1 = popLong(frame);
 
@@ -367,7 +513,7 @@ void ladd_impl(Frame *frame) {
     pushLong(frame, result);
 }
 
-void lsub_impl(Frame *frame) {
+void lsub_impl(Frame *frame){
     u8 value2 = popLong(frame);
     u8 value1 = popLong(frame);
 
@@ -376,7 +522,7 @@ void lsub_impl(Frame *frame) {
     pushLong(frame, result);
 }
 
-void lmul_impl(Frame *frame) {
+void lmul_impl(Frame *frame){
     u8 value2 = popLong(frame);
     u8 value1 = popLong(frame);
 
@@ -385,7 +531,7 @@ void lmul_impl(Frame *frame) {
     pushLong(frame, result);
 }
 
-void ldiv_impl(Frame *frame) {
+void ldiv_impl(Frame *frame){
     u8 value2 = popLong(frame);
     u8 value1 = popLong(frame);
 
@@ -399,7 +545,7 @@ void ldiv_impl(Frame *frame) {
     pushLong(frame, result);
 }
 
-void lrem_impl(Frame *frame) {
+void lrem_impl(Frame *frame){
     u8 value2 = popLong(frame);
     u8 value1 = popLong(frame);
 
@@ -413,14 +559,13 @@ void lrem_impl(Frame *frame) {
     pushLong(frame, result);
 }
 
-void lneg_impl(Frame *frame) {
+void lneg_impl(Frame *frame){
     u8 value = popLong(frame);
 
     u8 result = -value;
 
     pushLong(frame, result);
 }
-
 
 
 // Return void
@@ -438,6 +583,56 @@ void return_impl(Frame *frame) {
 void ireturn_impl(Frame *frame) {
     u4 return_value = popOperand(frame);
     printf(" >> IRETURN: %d\n", return_value); // Debug temporário
+    JVM *jvm = frame->jvm_ref;
+    Frame * prev_frame = frame->previous;
+
+    if (prev_frame != NULL) {
+        pushOperand(prev_frame, return_value);
+    }
+
+    jvm->current_frame = prev_frame;
+    deleteFrame(frame);
+}
+
+// Return com valor long
+
+void lreturn_impl(Frame *frame) {
+    u8 return_value = popLong(frame);
+    printf(" >> LRETURN: %lld\n", (long long)return_value); // Debug temporário
+    JVM *jvm = frame->jvm_ref;
+    Frame * prev_frame = frame->previous;
+
+    if (prev_frame != NULL) {
+        pushLong(prev_frame, return_value);
+    }
+
+    jvm->current_frame = prev_frame;
+    deleteFrame(frame);
+}
+
+// Return com valor double
+
+void dreturn_impl(Frame *frame) {
+    u8 return_value = popLong(frame);
+    double dvalue = *(double*)&return_value;
+    printf(" >> DRETURN: %f\n", dvalue); // Debug temporário
+    JVM *jvm = frame->jvm_ref;
+    Frame * prev_frame = frame->previous;
+
+    if (prev_frame != NULL) {
+        pushLong(prev_frame, return_value);
+    }
+
+    jvm->current_frame = prev_frame;
+    deleteFrame(frame);
+}
+
+// Return com valor float
+
+void freturn_impl(Frame *frame) {
+    u4 return_value = popOperand(frame);
+    float fvalue = *(float*)&return_value;
+    printf(" >> FRETURN: %f\n", fvalue); // Debug temporário
     JVM *jvm = frame->jvm_ref;
     Frame * prev_frame = frame->previous;
 
@@ -657,7 +852,7 @@ void invokestatic_impl(Frame *frame) {
     char *descriptor = (char *)cp[desc_idx-1].info.utf8_info.bytes;
 
     // 2. Buscar Método na Classe
-    method_info *method = findMethod(frame->cf_ref, method_name);
+    method_info *method = findMethod(frame->cf_ref, method_name, descriptor);
     if (!method) {
         fprintf(stderr, "Erro: Metodo estatico '%s' nao encontrado.\n", method_name);
         exit(1);

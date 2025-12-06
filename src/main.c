@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
         loadClass(jvm, cf);
 
         // Busca dinâmica pelo método de entrada
-        method_info *entryMethod = findMethod(cf, entryMethodName);
+        method_info *entryMethod = findMethod(cf, entryMethodName, "([Ljava/lang/String;)V");
         if (entryMethod == NULL) {
             fprintf(stderr, "Erro: Metodo '%s' nao foi encontrado na classe.\n", entryMethodName);
 

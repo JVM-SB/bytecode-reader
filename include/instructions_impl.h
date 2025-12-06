@@ -86,6 +86,23 @@ void ineg_impl(Frame *frame);
 
 void iinc_impl(Frame *frame);
 
+// Aritmética (double)
+void dadd_impl(Frame *frame);
+void dsub_impl(Frame *frame);
+void dmul_impl(Frame *frame);
+void ddiv_impl(Frame *frame);
+void drem_impl(Frame *frame);
+void dneg_impl(Frame *frame);
+
+// Artimética (float)
+void fadd_impl(Frame *frame);
+void fsub_impl(Frame *frame);
+void fmul_impl(Frame *frame);
+void fdiv_impl(Frame *frame);
+void frem_impl(Frame *frame);
+void fneg_impl(Frame *frame);
+
+// Aritmética (Long)
 void ladd_impl(Frame *frame);
 void lsub_impl(Frame *frame);
 void lmul_impl(Frame *frame);
@@ -97,6 +114,9 @@ void lneg_impl(Frame *frame);
 // RETURN
 void return_impl(Frame *frame);
 void ireturn_impl(Frame *frame);
+void lreturn_impl(Frame *frame);
+void freturn_impl(Frame *frame);
+void dreturn_impl(Frame *frame);
 
 // STACK
 void pop_impl(Frame *frame);
