@@ -26,6 +26,13 @@ void initExecutionEngine() {
     instructions[lconst_0]  = lconst_0_impl;
     instructions[lconst_1]  = lconst_1_impl;
 
+    instructions[fconst_0]  = fconst_0_impl;
+    instructions[fconst_1]  = fconst_1_impl;
+    instructions[fconst_2]  = fconst_2_impl;
+
+    instructions[dconst_0]  = dconst_0_impl;
+    instructions[dconst_1]  = dconst_1_impl;
+
     instructions[bipush]    = bipush_impl;
     instructions[sipush]    = sipush_impl;
 
@@ -132,6 +139,10 @@ void initExecutionEngine() {
 
     // Comparação
     instructions[lcmp]      = lcmp_impl;
+    instructions[fcmpl]     = fcmpl_impl;
+    instructions[fcmpg]     = fcmpg_impl;
+    instructions[dcmpl]     = dcmpl_impl;
+    instructions[dcmpg]     = dcmpg_impl;
 
     // Branching (IFs)
     instructions[ifeq]      = ifeq_impl;

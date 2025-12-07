@@ -63,6 +63,49 @@ void lconst_1_impl(Frame *frame) {
     pushOperand(frame, 1);
 }
 
+void fconst_0_impl(Frame *frame) {
+    float value = 0.0f;
+    u4 intBits;
+    memcpy(&intBits, &value, sizeof(u4));
+    pushOperand(frame, intBits);
+}
+
+void fconst_1_impl(Frame *frame) {
+    float value = 1.0f;
+    u4 intBits;
+    memcpy(&intBits, &value, sizeof(u4));
+    pushOperand(frame, intBits);
+}
+
+void fconst_2_impl(Frame *frame) {
+    float value = 2.0f;
+    u4 intBits;
+    memcpy(&intBits, &value, sizeof(u4));
+    pushOperand(frame, intBits);
+}
+
+void dconst_0_impl(Frame *frame) {
+    double value = 0.0;
+    u4 highBits, lowBits;
+    u8 longBits;
+    memcpy(&longBits, &value, sizeof(u8));
+    highBits = (u4)(longBits >> 32);
+    lowBits = (u4)(longBits & 0xFFFFFFFF);
+    pushOperand(frame, highBits);
+    pushOperand(frame, lowBits);
+}
+
+void dconst_1_impl(Frame *frame) {
+    double value = 1.0;
+    u4 highBits, lowBits;
+    u8 longBits;
+    memcpy(&longBits, &value, sizeof(u8));
+    highBits = (u4)(longBits >> 32);
+    lowBits = (u4)(longBits & 0xFFFFFFFF);
+    pushOperand(frame, highBits);
+    pushOperand(frame, lowBits);
+}
+
 void bipush_impl(Frame *frame) {
     int8_t byte = (int8_t) READ_U1(frame);
     pushOperand(frame, (u4)byte);
@@ -608,7 +651,6 @@ void lreturn_impl(Frame *frame) {
 
 void dreturn_impl(Frame *frame) {
     u8 return_value = popLong(frame);
-    double dvalue = *(double*)&return_value;
     JVM *jvm = frame->jvm_ref;
     Frame * prev_frame = frame->previous;
 
@@ -624,7 +666,6 @@ void dreturn_impl(Frame *frame) {
 
 void freturn_impl(Frame *frame) {
     u4 return_value = popOperand(frame);
-    float fvalue = *(float*)&return_value;
     JVM *jvm = frame->jvm_ref;
     Frame * prev_frame = frame->previous;
 
@@ -701,6 +742,73 @@ void lcmp_impl(Frame *frame) {
     if ((int64_t)v1 > (int64_t)v2) pushOperand(frame, 1);
     else if ((int64_t)v1 < (int64_t)v2) pushOperand(frame, -1); // Representação de -1 em u4
     else pushOperand(frame, 0);
+}
+
+void fcmpl_impl(Frame *frame) {
+    u4 v2_bits = popOperand(frame);
+    u4 v1_bits = popOperand(frame);
+    float v1 = *(float*)&v1_bits;
+    float v2 = *(float*)&v2_bits;
+
+    if (isnan(v1) || isnan(v2)) {
+        pushOperand(frame, -1);
+    } else if (v1 > v2) {
+        pushOperand(frame, 1);
+    } else if (v1 < v2) {
+        pushOperand(frame, -1);
+    } else {
+        pushOperand(frame, 0);
+    }
+}
+
+void fcmpg_impl(Frame *frame) {
+    u4 v2_bits = popOperand(frame);
+    u4 v1_bits = popOperand(frame);
+    float v1 = *(float*)&v1_bits;
+    float v2 = *(float*)&v2_bits;
+
+    if (isnan(v1) || isnan(v2)) {
+        pushOperand(frame, 1);
+    } else if (v1 > v2) {
+        pushOperand(frame, 1);
+    } else if (v1 < v2) {
+        pushOperand(frame, -1);
+    } else {
+        pushOperand(frame, 0);
+    }
+}
+void dcmpl_impl(Frame *frame) {
+    u8 v2_bits = popLong(frame);
+    u8 v1_bits = popLong(frame);
+    double v1 = *(double*)&v1_bits;
+    double v2 = *(double*)&v2_bits;
+
+    if (isnan(v1) || isnan(v2)) {
+        pushOperand(frame, -1);
+    } else if (v1 > v2) {
+        pushOperand(frame, 1);
+    } else if (v1 < v2) {
+        pushOperand(frame, -1);
+    } else {
+        pushOperand(frame, 0);
+    }
+}
+
+void dcmpg_impl(Frame *frame) {
+    u8 v2_bits = popLong(frame);
+    u8 v1_bits = popLong(frame);
+    double v1 = *(double*)&v1_bits;
+    double v2 = *(double*)&v2_bits;
+
+    if (isnan(v1) || isnan(v2)) {
+        pushOperand(frame, 1);
+    } else if (v1 > v2) {
+        pushOperand(frame, 1);
+    } else if (v1 < v2) {
+        pushOperand(frame, -1);
+    } else {
+        pushOperand(frame, 0);
+    }
 }
 
 // Instruções de Desvio

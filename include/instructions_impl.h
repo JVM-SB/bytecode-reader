@@ -22,6 +22,13 @@ void iconst_5_impl(Frame *frame);
 void lconst_0_impl(Frame *frame);
 void lconst_1_impl(Frame *frame);
 
+void fconst_0_impl(Frame *frame);
+void fconst_1_impl(Frame *frame);
+void fconst_2_impl(Frame *frame);
+
+void dconst_0_impl(Frame *frame);
+void dconst_1_impl(Frame *frame);
+
 void bipush_impl(Frame *frame);   // Byte Imediato
 void sipush_impl(Frame *frame);   // Short Imediato
 
@@ -131,6 +138,10 @@ void swap_impl(Frame *frame);
 
 // COMPARE
 void lcmp_impl(Frame *frame);
+void fcmpl_impl(Frame *frame);
+void fcmpg_impl(Frame *frame);
+void dcmpl_impl(Frame *frame);
+void dcmpg_impl(Frame *frame);
 
 // BRANCH
 void ifeq_impl(Frame *frame);
