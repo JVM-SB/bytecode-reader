@@ -85,3 +85,11 @@ ClassFile* getClass(JVM *jvm, u4 index) {
 
     return jvm->method_area[index];
 }
+
+Array* getArrayFromRef(JVM *jvm, u4 arrayref) {
+    if (arrayref >= jvm->heap_ptr) {
+        fprintf(stderr, "Erro: Referência de array inválida.\n");
+        exit(1);
+    }
+    return (Array *)(jvm->heap + arrayref);
+}

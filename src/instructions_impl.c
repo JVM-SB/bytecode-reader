@@ -16,7 +16,9 @@ void nop_impl(Frame *frame) {
 
 // Placeholder
 void unimpl(Frame *frame) {
-    printf("Instrucao nao implementada (PC: %u)\n", frame->pc - 1);
+    u1 opcode = frame->bytecode[frame->pc - 1]; 
+    printf("Instrucao nao implementada (PC: %u, Opcode: 0x%02x)\n", frame->pc - 1, opcode);
+    // printf("Instrucao nao implementada (PC: %u)\n", frame->pc - 1);
     exit(-1);
 }
 
@@ -1118,6 +1120,13 @@ void invokevirtual_impl(Frame *frame) {
             memcpy(&fval, &val, sizeof(float));
             printf("%f\n", fval);
         }
+        else if (strcmp(descriptor, "(Ljava/lang/Object;)V") == 0) { // Object Print (String)
+            u4 ref = popOperand(frame);
+            popOperand(frame);
+            // Como não temos a implementação de String.toString() na JVM,
+            // apenas indicamos que a chamada ocorreu e qual era a referência.
+            printf("Chamada a System.out.println(Object) com referencia: %u\n", ref);
+        }
 
         else {
             fprintf(stderr,"Metodo println/print com descritor nao suportado: %s\n", descriptor);
@@ -1125,4 +1134,300 @@ void invokevirtual_impl(Frame *frame) {
     } else {
         fprintf(stderr, "Metodo virtual nao simulado: %s\n", method_name);
     }
+}
+// LOADS (Referência)
+void aload_impl(Frame *frame) {
+    printf("Execuntando: aload_impl\n");
+    u1 index = READ_U1(frame);
+    pushOperand(frame, frame->local_variables[index]);
+}
+
+void aload_0_impl(Frame *frame) {
+    printf("Execuntando: aload_0_impl\n");
+    pushOperand(frame, frame->local_variables[0]);
+}
+
+void aload_1_impl(Frame *frame) {
+    printf("Execuntando: aload_1_impl\n");
+    pushOperand(frame, frame->local_variables[1]);
+}
+
+void aload_2_impl(Frame *frame) {
+    printf("Execuntando: aload_2_impl\n");
+    pushOperand(frame, frame->local_variables[2]);
+}
+
+void aload_3_impl(Frame *frame) {
+    printf("Execuntando: aload_3_impl\n");
+    pushOperand(frame, frame->local_variables[3]);
+}
+
+// STORES (Referência)
+void astore_impl(Frame *frame) {
+    printf("Execuntando: astore_impl\n");
+    u1 index = READ_U1(frame);
+    frame->local_variables[index] = popOperand(frame);
+}
+
+void astore_0_impl(Frame *frame) {
+    printf("Execuntando: astore_0_impl\n");
+    frame->local_variables[0] = popOperand(frame);
+}
+
+void astore_1_impl(Frame *frame) {
+    printf("Execuntando: astore_1_impl\n");
+    frame->local_variables[1] = popOperand(frame);
+}
+
+void astore_2_impl(Frame *frame) {
+    printf("Execuntando: astore_2_impl\n");
+    frame->local_variables[2] = popOperand(frame);
+}
+
+void astore_3_impl(Frame *frame) {
+    printf("Execuntando: astore_3_impl\n");
+    frame->local_variables[3] = popOperand(frame);
+}
+
+// STACK (dup2_x1 e dup2_x2)
+void dup2_x1_impl(Frame *frame) {
+    u4 value1 = popOperand(frame);
+    u4 value2 = popOperand(frame);
+    u4 value3 = popOperand(frame);
+
+    pushOperand(frame, value2);
+    pushOperand(frame, value1);
+    pushOperand(frame, value3);
+    pushOperand(frame, value2);
+    pushOperand(frame, value1);
+}
+
+void dup2_x2_impl(Frame *frame) {
+    u4 value1 = popOperand(frame);
+    u4 value2 = popOperand(frame);
+    u4 value3 = popOperand(frame);
+    u4 value4 = popOperand(frame);
+
+    pushOperand(frame, value2);
+    pushOperand(frame, value1);
+    pushOperand(frame, value4);
+    pushOperand(frame, value3);
+    pushOperand(frame, value2);
+    pushOperand(frame, value1);
+}
+
+// Funções auxiliares para Array Load
+#include "memory_manager.h"
+
+// Macro para simplificar a implementação de array load para tipos de 4 bytes (int, float, ref)
+#define ARRAY_LOAD_4BYTE(name, type) \
+void name##_impl(Frame *frame) { \
+    u4 index = popOperand(frame); \
+    u4 arrayref = popOperand(frame); \
+    \
+    Array *array = getArrayFromRef(frame->jvm_ref, arrayref); \
+    \
+    if (array->type != type) { \
+        fprintf(stderr, "Erro: Tipo de array inesperado para " #name ". Esperado %u, encontrado %u\n", type, array->type); \
+        exit(1); \
+    } \
+    \
+    if (index >= array->length) { \
+        fprintf(stderr, "Erro: ArrayIndexOutOfBoundsException. Índice %u fora do limite %u\n", index, array->length); \
+        exit(1); \
+    } \
+    \
+    u4 offset = index * sizeof(u4); \
+    u4 value; \
+    memcpy(&value, array->data + offset, sizeof(u4)); \
+    \
+    pushOperand(frame, value); \
+}
+
+// Macro para simplificar a implementação de array load para tipos de 8 bytes (long, double)
+#define ARRAY_LOAD_8BYTE(name, type) \
+void name##_impl(Frame *frame) { \
+    u4 index = popOperand(frame); \
+    u4 arrayref = popOperand(frame); \
+    \
+    Array *array = getArrayFromRef(frame->jvm_ref, arrayref); \
+    \
+    if (array->type != type) { \
+        fprintf(stderr, "Erro: Tipo de array inesperado para " #name ". Esperado %u, encontrado %u\n", type, array->type); \
+        exit(1); \
+    } \
+    \
+    if (index >= array->length) { \
+        fprintf(stderr, "Erro: ArrayIndexOutOfBoundsException. Índice %u fora do limite %u\n", index, array->length); \
+        exit(1); \
+    } \
+    \
+    u4 offset = index * sizeof(u8); \
+    u8 value; \
+    memcpy(&value, array->data + offset, sizeof(u8)); \
+    \
+    pushLong(frame, value); \
+}
+
+// Macro para simplificar a implementação de array load para tipos de 1 byte (byte, boolean)
+#define ARRAY_LOAD_1BYTE(name, type) \
+void name##_impl(Frame *frame) { \
+    u4 index = popOperand(frame); \
+    u4 arrayref = popOperand(frame); \
+    \
+    Array *array = getArrayFromRef(frame->jvm_ref, arrayref); \
+    \
+    if (array->type != type) { \
+        fprintf(stderr, "Erro: Tipo de array inesperado para " #name ". Esperado %u, encontrado %u\n", type, array->type); \
+        exit(1); \
+    } \
+    \
+    if (index >= array->length) { \
+        fprintf(stderr, "Erro: ArrayIndexOutOfBoundsException. Índice %u fora do limite %u\n", index, array->length); \
+        exit(1); \
+    } \
+    \
+    u4 offset = index * sizeof(u1); \
+    u1 byte_value = array->data[offset]; \
+    \
+    /* O valor é estendido para int (u4) e empilhado */ \
+    pushOperand(frame, (u4) (int32_t) (int8_t) byte_value); \
+}
+
+// Macro para simplificar a implementação de array load para tipos de 2 bytes (char, short)
+#define ARRAY_LOAD_2BYTE(name, type) \
+void name##_impl(Frame *frame) { \
+    u4 index = popOperand(frame); \
+    u4 arrayref = popOperand(frame); \
+    \
+    Array *array = getArrayFromRef(frame->jvm_ref, arrayref); \
+    \
+    if (array->type != type) { \
+        fprintf(stderr, "Erro: Tipo de array inesperado para " #name ". Esperado %u, encontrado %u\n", type, array->type); \
+        exit(1); \
+    } \
+    \
+    if (index >= array->length) { \
+        fprintf(stderr, "Erro: ArrayIndexOutOfBoundsException. Índice %u fora do limite %u\n", index, array->length); \
+        exit(1); \
+    } \
+    \
+    u4 offset = index * sizeof(u2); \
+    u2 short_value; \
+    memcpy(&short_value, array->data + offset, sizeof(u2)); \
+    \
+    /* O valor é estendido para int (u4) e empilhado */ \
+    pushOperand(frame, (u4) (int32_t) (int16_t) short_value); \
+}
+
+// Instruções de Criação de Array
+void newarray_impl(Frame *frame) {
+    u1 atype = READ_U1(frame);
+    u4 count = popOperand(frame);
+
+    u1 element_size;
+    u1 array_type;
+
+    // Mapeamento de atype para tamanho e tipo interno
+    switch (atype) {
+        case 4: // T_BOOLEAN
+            element_size = 1;
+            array_type = 4;
+            break;
+        case 5: // T_CHAR
+            element_size = 2;
+            array_type = 5;
+            break;
+        case 6: // T_FLOAT
+            element_size = 4;
+            array_type = 6;
+            break;
+        case 7: // T_DOUBLE
+            element_size = 8;
+            array_type = 7;
+            break;
+        case 8: // T_BYTE
+            element_size = 1;
+            array_type = 8;
+            break;
+        case 9: // T_SHORT
+            element_size = 2;
+            array_type = 9;
+            break;
+        case 10: // T_INT
+            element_size = 4;
+            array_type = 10;
+            break;
+        case 11: // T_LONG
+            element_size = 8;
+            array_type = 11;
+            break;
+        default:
+            fprintf(stderr, "Erro: Tipo de array primitivo desconhecido para newarray: %u\n", atype);
+            exit(1);
+    }
+    
+    Array *arr = createArray(frame->jvm_ref, count, array_type, element_size);
+    
+    if (arr == NULL) {
+        fprintf(stderr, "Erro: createArray retornou NULL.\n");
+        exit(1);
+    }
+
+    u4 arrayref = (u4)((u1*)arr - frame->jvm_ref->heap);
+    printf("DEBUG: Array alocado em heap_ptr: %u, Referencia: %u\n", frame->jvm_ref->heap_ptr, arrayref); // Adicione este print
+    pushOperand(frame, arrayref);
+}
+
+// Instruções de Armazenamento em Array
+void iastore_impl(Frame *frame) {
+    // Ordem de desempilhamento: valor, índice, referência do array
+    u4 value = popOperand(frame);
+    u4 index = popOperand(frame);
+    u4 arrayref = popOperand(frame);
+
+    // A função getArrayFromRef deve estar no seu memory_manager.c
+    Array *array = getArrayFromRef(frame->jvm_ref, arrayref);
+
+    // 10 é o código para T_INT (array de inteiros)
+    if (array->type != 10) { 
+        fprintf(stderr, "Erro: Tipo de array inesperado para iastore. Esperado 10, encontrado %u\n", array->type);
+        exit(1);
+    }
+
+    // Verificação de limites (ArrayIndexOutOfBoundsException)
+    if (index >= array->length) {
+        fprintf(stderr, "Erro: ArrayIndexOutOfBoundsException. Índice %u fora do limite %u\n", index, array->length);
+        exit(1);
+    }
+
+    // Calcula o offset e armazena o valor
+    u4 offset = index * sizeof(u4);
+    memcpy(array->data + offset, &value, sizeof(u4));
+}
+
+// Instruções de Armazenamento em Array
+void dastore_impl(Frame *frame) {
+    // Ordem de desempilhamento: valor (2 slots), índice (1 slot), referência do array (1 slot)
+    u8 value = popLong(frame);
+    u4 index = popOperand(frame);
+    u4 arrayref = popOperand(frame);
+
+    Array *array = getArrayFromRef(frame->jvm_ref, arrayref);
+
+    // 7 é o código para T_DOUBLE (array de doubles)
+    if (array->type != 7) { 
+        fprintf(stderr, "Erro: Tipo de array inesperado para dastore. Esperado 7, encontrado %u\n", array->type);
+        exit(1);
+    }
+
+    // Verificação de limites (ArrayIndexOutOfBoundsException)
+    if (index >= array->length) {
+        fprintf(stderr, "Erro: ArrayIndexOutOfBoundsException. Índice %u fora do limite %u\n", index, array->length);
+        exit(1);
+    }
+
+    // Calcula o offset e armazena o valor (8 bytes)
+    u4 offset = index * sizeof(u8);
+    memcpy(array->data + offset, &value, sizeof(u8));
 }

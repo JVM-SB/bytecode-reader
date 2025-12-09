@@ -8,15 +8,15 @@
 void initJVM(JVM *jvm);
 void freeJVM(JVM *jvm);
 
-
 //  Heap
 u1* allocHeap(JVM *jvm, u4 size);
-
 
 //  Objetos e Arrays
 Object* createObject(JVM *jvm, u4 class_index, u4 fields_size);
 Array* createArray(JVM *jvm, u4 length, u1 type, u1 element_size);
 
+// Acesso a Arrays
+Array* getArrayFromRef(JVM *jvm, u4 arrayref);
 
 // Carregador de Classes
 void loadClass(JVM *jvm, ClassFile *cf);

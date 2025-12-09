@@ -58,7 +58,28 @@ void fload_1_impl(Frame *frame);
 void fload_2_impl(Frame *frame);
 void fload_3_impl(Frame *frame);
 
+// LOAD FROM ARRAY
+void iaload_impl(Frame *frame);
+void laload_impl(Frame *frame);
+void faload_impl(Frame *frame);
+void daload_impl(Frame *frame);
+void aaload_impl(Frame *frame);
+void baload_impl(Frame *frame);
+void caload_impl(Frame *frame);
+void saload_impl(Frame *frame);
+
+void aload_impl(Frame *frame);
+void aload_0_impl(Frame *frame);
+void aload_1_impl(Frame *frame);
+void aload_2_impl(Frame *frame);
+void aload_3_impl(Frame *frame);
+
 // STORE (Guardar da Pilha para Locais)
+void astore_impl(Frame *frame);
+void astore_0_impl(Frame *frame);
+void astore_1_impl(Frame *frame);
+void astore_2_impl(Frame *frame);
+void astore_3_impl(Frame *frame);
 void istore_impl(Frame *frame);
 void istore_0_impl(Frame *frame);
 void istore_1_impl(Frame *frame);
@@ -82,6 +103,10 @@ void fstore_0_impl(Frame *frame);
 void fstore_1_impl(Frame *frame);
 void fstore_2_impl(Frame *frame);
 void fstore_3_impl(Frame *frame);
+
+void newarray_impl(Frame *frame);
+void iastore_impl(Frame *frame);
+void dastore_impl(Frame *frame);
 
 // Aritmética (int)
 void iadd_impl(Frame *frame);

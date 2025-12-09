@@ -48,6 +48,12 @@ void initExecutionEngine() {
     instructions[lload_2]   = lload_2_impl;
     instructions[lload_3]   = lload_3_impl;
 
+    instructions[aload]     = aload_impl;
+    instructions[aload_0]   = aload_0_impl;
+    instructions[aload_1]   = aload_1_impl;
+    instructions[aload_2]   = aload_2_impl;
+    instructions[aload_3]   = aload_3_impl;
+
     instructions[dload]     = dload_impl;
     instructions[dload_0]   = dload_0_impl;
     instructions[dload_1]   = dload_1_impl;
@@ -59,6 +65,12 @@ void initExecutionEngine() {
     instructions[fload_1]   = fload_1_impl;
     instructions[fload_2]   = fload_2_impl;
     instructions[fload_3]   = fload_3_impl;
+
+    instructions[astore]    = astore_impl;
+    instructions[astore_0]  = astore_0_impl;
+    instructions[astore_1]  = astore_1_impl;
+    instructions[astore_2]  = astore_2_impl;
+    instructions[astore_3]  = astore_3_impl;
 
     instructions[istore]    = istore_impl;
     instructions[istore_0]  = istore_0_impl;
@@ -167,9 +179,15 @@ void initExecutionEngine() {
     instructions[invokestatic]  = invokestatic_impl;
     instructions[invokevirtual] = invokevirtual_impl;
 
+    instructions[newarray] = newarray_impl;
+
     // LDC
     instructions[ldc]       = ldc_impl;
     instructions[ldc2_w]    = ldc2_w_impl;
+
+    instructions[iastore] = iastore_impl;
+    instructions[dastore] = dastore_impl;
+
 }
 
 void execute(JVM *jvm) {
@@ -184,6 +202,8 @@ void execute(JVM *jvm) {
         // FETCH
         u1 opcode = frame->bytecode[frame->pc];
         frame->pc++; 
+
+        //printf("PC: %u | Opcode: 0x%02x\n", frame->pc - 1, opcode);
 
         // EXECUTE
         // Os argumentos são lidos dentro da função da instrução
