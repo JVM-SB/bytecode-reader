@@ -606,6 +606,149 @@ void lneg_impl(Frame *frame){
     pushLong(frame, result);
 }
 
+// Casts
+// Int to Long
+void i2l_impl(Frame *frame) {
+    u4 ival = popOperand(frame);
+    int32_t intVal = (int32_t)ival;
+    int64_t longVal = (int64_t)intVal;
+    pushLong(frame, (u8)longVal);
+}
+
+// Int to Float
+void i2f_impl(Frame *frame) {
+    u4 ival = popOperand(frame);
+    int32_t intVal = (int32_t)ival;
+    float fVal = (float)intVal;
+    u4 result;
+    memcpy(&result, &fVal, sizeof(u4));
+    pushOperand(frame, result);
+}
+
+// Int to Double
+void i2d_impl(Frame *frame) {
+    u4 ival = popOperand(frame);
+    int32_t intVal = (int32_t)ival;
+    double dVal = (double)intVal;
+    u8 result;
+    memcpy(&result, &dVal, sizeof(u8));
+    pushLong(frame, result);
+}
+
+// Int to Byte
+void i2b_impl(Frame *frame) {
+    u4 val = popOperand(frame);
+    int32_t i = (int32_t)val;
+    int8_t b = (int8_t)i; 
+    int32_t res = (int32_t)b; // Extende sinal
+    pushOperand(frame, (u4)res);
+}
+
+// Int to Char
+void i2c_impl(Frame *frame) {
+    u4 val = popOperand(frame);
+    int32_t i = (int32_t)val;
+    uint16_t c = (uint16_t)i; 
+    int32_t res = (int32_t)c; 
+    pushOperand(frame, (u4)res);
+}
+
+// Int to Short
+void i2s_impl(Frame *frame) {
+    u4 val = popOperand(frame);
+    int32_t i = (int32_t)val;
+    int16_t s = (int16_t)i; 
+    int32_t res = (int32_t)s; // Extende sinal
+    pushOperand(frame, (u4)res);
+}
+
+// Long to Int
+void l2i_impl(Frame *frame) {
+    u8 lval = popLong(frame);
+    int64_t longVal = (int64_t)lval;
+    int32_t intVal = (int32_t)longVal; // Trunca
+    pushOperand(frame, (u4)intVal);
+}
+
+// Long to Float
+void l2f_impl(Frame *frame) {
+    u8 lval = popLong(frame);
+    int64_t longVal = (int64_t)lval;
+    float fVal = (float)longVal;
+    u4 result;
+    memcpy(&result, &fVal, sizeof(u4));
+    pushOperand(frame, result);
+}
+
+// Long to Double
+void l2d_impl(Frame *frame) {
+    u8 lval = popLong(frame);
+    int64_t longVal = (int64_t)lval;
+    double dVal = (double)longVal;
+    u8 result;
+    memcpy(&result, &dVal, sizeof(u8));
+    pushLong(frame, result);
+}
+
+// Float to Int
+void f2i_impl(Frame *frame) {
+    u4 fbits = popOperand(frame);
+    float fVal;
+    memcpy(&fVal, &fbits, sizeof(u4));
+    int32_t intVal = (int32_t)fVal; // Cast direto (truncamento simples)
+    pushOperand(frame, (u4)intVal);
+}
+
+// Float to Long
+void f2l_impl(Frame *frame) {
+    u4 fbits = popOperand(frame);
+    float fVal;
+    memcpy(&fVal, &fbits, sizeof(u4));
+    int64_t longVal = (int64_t)fVal;
+    pushLong(frame, (u8)longVal);
+}
+
+// Float to Double
+void f2d_impl(Frame *frame) {
+    u4 fbits = popOperand(frame);
+    float fVal;
+    memcpy(&fVal, &fbits, sizeof(u4));
+    double dVal = (double)fVal;
+    u8 result;
+    memcpy(&result, &dVal, sizeof(u8));
+    pushLong(frame, result);
+}
+
+// Double
+
+// Double to Int
+void d2i_impl(Frame *frame) {
+    u8 dbits = popLong(frame);
+    double dVal;
+    memcpy(&dVal, &dbits, sizeof(u8));
+    int32_t intVal = (int32_t)dVal;
+    pushOperand(frame, (u4)intVal);
+}
+
+// Double to Long
+void d2l_impl(Frame *frame) {
+    u8 dbits = popLong(frame);
+    double dVal;
+    memcpy(&dVal, &dbits, sizeof(u8));
+    int64_t longVal = (int64_t)dVal;
+    pushLong(frame, (u8)longVal);
+}
+
+// Double to Float
+void d2f_impl(Frame *frame) {
+    u8 dbits = popLong(frame);
+    double dVal;
+    memcpy(&dVal, &dbits, sizeof(u8));
+    float fVal = (float)dVal;
+    u4 result;
+    memcpy(&result, &fVal, sizeof(u4));
+    pushOperand(frame, result);
+}
 
 // Return void
 void return_impl(Frame *frame) {

@@ -117,6 +117,30 @@ void ldiv_impl(Frame *frame);
 void lrem_impl(Frame *frame);
 void lneg_impl(Frame *frame);
 
+// Cast
+// Int
+
+void i2l_impl(Frame *frame);
+void i2f_impl(Frame *frame);
+void i2d_impl(Frame *frame);
+void i2b_impl(Frame *frame);
+void i2c_impl(Frame *frame);
+void i2s_impl(Frame *frame);
+
+// Long
+void l2i_impl(Frame *frame);
+void l2f_impl(Frame *frame);
+void l2d_impl(Frame *frame);
+
+// Float
+void f2i_impl(Frame *frame);
+void f2l_impl(Frame *frame);
+void f2d_impl(Frame *frame);
+
+// Double
+void d2i_impl(Frame *frame);
+void d2l_impl(Frame *frame);
+void d2f_impl(Frame *frame);
 
 // RETURN
 void return_impl(Frame *frame);

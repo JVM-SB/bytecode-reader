@@ -121,6 +121,30 @@ void initExecutionEngine() {
     // Incremento
     instructions[iinc] = iinc_impl;
 
+    // Casting
+    // Int
+    instructions[i2l] = i2l_impl;
+    instructions[i2f] = i2f_impl;
+    instructions[i2d] = i2d_impl;
+    instructions[i2b] = i2b_impl;
+    instructions[i2c] = i2c_impl;
+    instructions[i2s] = i2s_impl;
+
+    // Long
+    instructions[l2i] = l2i_impl;
+    instructions[l2f] = l2f_impl;
+    instructions[l2d] = l2d_impl;
+
+    // Float
+    instructions[f2i] = f2i_impl;
+    instructions[f2l] = f2l_impl;
+    instructions[f2d] = f2d_impl;
+
+    // Double
+    instructions[d2i] = d2i_impl;
+    instructions[d2l] = d2l_impl;
+    instructions[d2f] = d2f_impl;
+    
     // Retorno
     instructions[ireturn] = ireturn_impl;
     instructions[return_] = return_impl;
