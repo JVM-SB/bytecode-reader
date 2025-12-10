@@ -187,6 +187,9 @@ void initExecutionEngine() {
 
     instructions[iastore] = iastore_impl;
     instructions[dastore] = dastore_impl;
+    instructions[lastore] = lastore_impl;
+    instructions[fastore] = fastore_impl;
+
 
 }
 

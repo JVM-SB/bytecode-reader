@@ -1375,7 +1375,7 @@ void newarray_impl(Frame *frame) {
     }
 
     u4 arrayref = (u4)((u1*)arr - frame->jvm_ref->heap);
-    printf("DEBUG: Array alocado em heap_ptr: %u, Referencia: %u\n", frame->jvm_ref->heap_ptr, arrayref); // Adicione este print
+    //printf("DEBUG: Array alocado em heap_ptr: %u, Referencia: %u\n", frame->jvm_ref->heap_ptr, arrayref);
     pushOperand(frame, arrayref);
 }
 
@@ -1431,3 +1431,68 @@ void dastore_impl(Frame *frame) {
     u4 offset = index * sizeof(u8);
     memcpy(array->data + offset, &value, sizeof(u8));
 }
+
+void fastore_impl(Frame *frame) {
+    // Pega o índice do array (do topo da pilha)
+    //printf("DEBUG: Pilha antes de pop: %u\n", *(u4*)frame->operand_stack[frame->size - 1]);
+    u4 index = popOperand(frame);
+    //printf("DEBUG: Índice após pop: %u\n", index);
+
+    
+    // Pega o valor do float (do topo da pilha)
+    u4 operand = popOperand(frame);  // Pega o valor da pilha
+    float value = *((float*)&operand);  // Converte de u4 para float
+    
+    // Pega a referência do array (do topo da pilha)
+    u4 arrayref = popOperand(frame);
+    
+    // Converte a referência para um ponteiro para o array (assumindo que a referência é um índice no heap)
+    Array *arr = (Array*)(frame->jvm_ref->heap + arrayref);
+
+    //printf("DEBUG: Índice do array: %u, Tamanho do array: %u\n", index, arr->length);
+
+    
+    // Verifica se o índice está dentro dos limites do array
+    if (index >= arr->length) {
+        fprintf(stderr, "Erro: Índice fora dos limites do array.\n");
+        exit(-1);
+    }
+    
+    // Armazena o valor no array de float
+    ((float*)arr->data)[index] = value;
+    
+    //printf("DEBUG: Armazenando valor %f em índice %u no array\n", value, index);
+}
+
+
+void lastore_impl(Frame *frame) {
+    // Pega o índice do array (do topo da pilha)
+    u4 index = popOperand(frame);
+    //printf("DEBUG: Índice após pop: %u\n", index);
+
+    
+    // Pega o valor do long (do topo da pilha)
+    u4 operand = popOperand(frame);  // Pega o valor da pilha
+    long value = *((long*)&operand);  // Converte de u4 para long
+    
+    // Pega a referência do array (do topo da pilha)
+    u4 arrayref = popOperand(frame);
+    
+    // Converte a referência para um ponteiro para o array (assumindo que a referência é um índice no heap)
+    Array *arr = (Array*)(frame->jvm_ref->heap + arrayref);
+
+    //printf("DEBUG: Índice do array: %u, Tamanho do array: %u\n", index, arr->length);
+
+    
+    // Verifica se o índice está dentro dos limites do array
+    if (index >= arr->length) {
+        fprintf(stderr, "Erro: Índice fora dos limites do array.\n");
+        exit(-1);
+    }
+    
+    // Armazena o valor no array de long
+    ((long*)arr->data)[index] = value;
+    
+    //printf("DEBUG: Armazenando valor %ld em índice %u no array\n", value, index);
+}
+

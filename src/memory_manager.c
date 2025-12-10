@@ -58,18 +58,14 @@ Object* createObject(JVM *jvm, u4 class_index, u4 fields_size) {
 }
 
 Array* createArray(JVM *jvm, u4 length, u1 type, u1 element_size) {
-    Array *arr = (Array*) calloc(1, sizeof(Array));
-    if (arr == NULL) {
-        fprintf(stderr, "Erro: Não foi possível alocar o array\n");
-        exit(-1);
-    }
-
+    u4 total_size = sizeof(Array) + (length * element_size);
+    printf("DEBUG: total_size = %u, length = %u, element_size = %u\n", total_size, length, element_size);
+    Array *arr = (Array*)allocHeap(jvm, total_size);
+    
     arr->type = type;
     arr->length = length;
-
-    u4 total_size = length * element_size;
-    arr->data = allocHeap(jvm, total_size);
-
+    arr->data = (u1*)(arr + 1); // IMPORTANTE: dados após a estrutura
+    
     return arr;
 }
 
@@ -88,8 +84,18 @@ ClassFile* getClass(JVM *jvm, u4 index) {
 
 Array* getArrayFromRef(JVM *jvm, u4 arrayref) {
     if (arrayref >= jvm->heap_ptr) {
-        fprintf(stderr, "Erro: Referência de array inválida.\n");
-        exit(1);
+        fprintf(stderr, "Erro: Referência de array inválida: %u (heap_ptr: %u)\n", 
+                arrayref, jvm->heap_ptr);
+        return NULL;
     }
-    return (Array *)(jvm->heap + arrayref);
+    
+    Array *arr = (Array*)(jvm->heap + arrayref);
+    
+    // Verificação adicional
+    if (arr->length > 1000000) {
+        fprintf(stderr, "Erro: Tamanho de array suspeito: %u\n", arr->length);
+        return NULL;
+    }
+    
+    return arr;
 }
