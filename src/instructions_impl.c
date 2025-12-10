@@ -725,6 +725,7 @@ void dup2_impl(Frame *frame) {
     pushOperand(frame, v1);
     pushOperand(frame, v2_val);
     pushOperand(frame, v1);
+    (void) v2;
 }
 
 void swap_impl(Frame *frame) {
@@ -1375,38 +1376,50 @@ void newarray_impl(Frame *frame) {
     }
 
     u4 arrayref = (u4)((u1*)arr - frame->jvm_ref->heap);
-    //printf("DEBUG: Array alocado em heap_ptr: %u, Referencia: %u\n", frame->jvm_ref->heap_ptr, arrayref);
+    
+    // CORREÇÃO: A referência 0 (NULL) é reservada.
+    if (arrayref == 0) {
+        fprintf(stderr, "Erro: Referência de array alocada é 0 (NULL). Verifique a alocação da heap.\n");
+        exit(1);
+    }
+    
     pushOperand(frame, arrayref);
 }
 
-// Instruções de Armazenamento em Array
 void iastore_impl(Frame *frame) {
     // Ordem de desempilhamento: valor, índice, referência do array
     u4 value = popOperand(frame);
     u4 index = popOperand(frame);
     u4 arrayref = popOperand(frame);
 
+    // 1. Verificação de Referência Nula (NullPointerException)
+    if (arrayref == 0) {
+        fprintf(stderr, "Erro: NullPointerException. Referência de array nula.\n");
+        exit(1);
+    }
+
     // A função getArrayFromRef deve estar no seu memory_manager.c
     Array *array = getArrayFromRef(frame->jvm_ref, arrayref);
 
+    // 2. Verificação de Tipo (ArrayStoreException - embora iastore não lance)
     // 10 é o código para T_INT (array de inteiros)
     if (array->type != 10) { 
         fprintf(stderr, "Erro: Tipo de array inesperado para iastore. Esperado 10, encontrado %u\n", array->type);
         exit(1);
     }
 
-    // Verificação de limites (ArrayIndexOutOfBoundsException)
+    // 3. Verificação de Limites (ArrayIndexOutOfBoundsException)
     if (index >= array->length) {
         fprintf(stderr, "Erro: ArrayIndexOutOfBoundsException. Índice %u fora do limite %u\n", index, array->length);
         exit(1);
     }
 
-    // Calcula o offset e armazena o valor
+    // 4. Calcula o offset e armazena o valor
     u4 offset = index * sizeof(u4);
     memcpy(array->data + offset, &value, sizeof(u4));
 }
 
-// Instruções de Armazenamento em Array
+
 void dastore_impl(Frame *frame) {
     // Ordem de desempilhamento: valor (2 slots), índice (1 slot), referência do array (1 slot)
     u8 value = popLong(frame);
@@ -1432,67 +1445,88 @@ void dastore_impl(Frame *frame) {
     memcpy(array->data + offset, &value, sizeof(u8));
 }
 
+// Array Store (Float)
 void fastore_impl(Frame *frame) {
-    // Pega o índice do array (do topo da pilha)
-    //printf("DEBUG: Pilha antes de pop: %u\n", *(u4*)frame->operand_stack[frame->size - 1]);
-    u4 index = popOperand(frame);
-    //printf("DEBUG: Índice após pop: %u\n", index);
+    u4 value = popOperand(frame); // float value (u4 representation)
+    u4 index = popOperand(frame); // array index
+    u4 arrayref = popOperand(frame); // array reference
 
-    
-    // Pega o valor do float (do topo da pilha)
-    u4 operand = popOperand(frame);  // Pega o valor da pilha
-    float value = *((float*)&operand);  // Converte de u4 para float
-    
-    // Pega a referência do array (do topo da pilha)
-    u4 arrayref = popOperand(frame);
-    
-    // Converte a referência para um ponteiro para o array (assumindo que a referência é um índice no heap)
-    Array *arr = (Array*)(frame->jvm_ref->heap + arrayref);
-
-    //printf("DEBUG: Índice do array: %u, Tamanho do array: %u\n", index, arr->length);
-
-    
-    // Verifica se o índice está dentro dos limites do array
-    if (index >= arr->length) {
-        fprintf(stderr, "Erro: Índice fora dos limites do array.\n");
-        exit(-1);
+    if (arrayref == 0) {
+        fprintf(stderr, "Erro: Array nula\n");
     }
-    
-    // Armazena o valor no array de float
-    ((float*)arr->data)[index] = value;
-    
-    //printf("DEBUG: Armazenando valor %f em índice %u no array\n", value, index);
+    Array *array = getArrayFromRef(frame->jvm_ref, arrayref);
+    if (index >= array->length) {
+        fprintf(stderr, "Erro: ArrayIndexOutOfBoundsException. Índice %u fora do limite %u\n", index, array->length);
+    }
+
+    array->data[index] = value;
+
+    (void) arrayref;
+    (void) index;
+    (void) value;
 }
 
-
+// Array Store (Long)
 void lastore_impl(Frame *frame) {
-    // Pega o índice do array (do topo da pilha)
-    u4 index = popOperand(frame);
-    //printf("DEBUG: Índice após pop: %u\n", index);
+    u4 low = popOperand(frame);  // Low part of long value
+    u4 high = popOperand(frame); // High part of long value
+    u4 index = popOperand(frame); // array index
+    u4 arrayref = popOperand(frame); // array reference
 
-    
-    // Pega o valor do long (do topo da pilha)
-    u4 operand = popOperand(frame);  // Pega o valor da pilha
-    long value = *((long*)&operand);  // Converte de u4 para long
-    
-    // Pega a referência do array (do topo da pilha)
-    u4 arrayref = popOperand(frame);
-    
-    // Converte a referência para um ponteiro para o array (assumindo que a referência é um índice no heap)
-    Array *arr = (Array*)(frame->jvm_ref->heap + arrayref);
-
-    //printf("DEBUG: Índice do array: %u, Tamanho do array: %u\n", index, arr->length);
-
-    
-    // Verifica se o índice está dentro dos limites do array
-    if (index >= arr->length) {
-        fprintf(stderr, "Erro: Índice fora dos limites do array.\n");
-        exit(-1);
+    if (arrayref == 0) {
+        fprintf(stderr, "Erro: Array nula\n");
     }
+    Array *array = getArrayFromRef(frame->jvm_ref, arrayref);
+    if (index >= array->length) {
+        fprintf(stderr, "Erro: ArrayIndexOutOfBoundsException. Índice %u fora do limite %u\n", index, array->length);
+    }
+    u8 long_value = ((u8)high << 32) | low;
+    array->data[index] = long_value;
+
+    (void) arrayref;
+    (void) index;
+    (void) high;
+    (void) low;
+}
+
+// Array Load (Int)
+void iaload_impl(Frame *frame) {
+    u4 index = popOperand(frame);
+    u4 arrayref = popOperand(frame);
+
+    if (arrayref == 0) {
+        fprintf(stderr, "Erro: Array nula\n");
+    }
+    Array *array = getArrayFromRef(frame->jvm_ref, arrayref);
+    if (index >= array->length) {
+        fprintf(stderr, "Erro: ArrayIndexOutOfBoundsException. Índice %u fora do limite %u\n", index, array->length);
+    }
+    u4 value = array->data[index];
+    pushOperand(frame, value);
+
+    // Placeholder para evitar erros de compilação
+    (void) arrayref;
+    (void) index;
+    pushOperand(frame, 0); // Valor de retorno placeholder
+}
+
+// INSTANCIAÇÃO
+void new_impl(Frame *frame) {
+    u2 index = READ_U2(frame); // Índice para a Constant Pool
+
+    // 1. Alocar e inicializar o objeto usando a função createObject fornecida
+    // createObject deve resolver o tamanho da classe a partir do 'index' na Constant Pool,
+    // alocar a memória (usando allocHeap) e inicializar a estrutura do objeto.
+    Object *obj = createObject(frame->jvm_ref, index, 0); 
     
-    // Armazena o valor no array de long
-    ((long*)arr->data)[index] = value;
-    
-    //printf("DEBUG: Armazenando valor %ld em índice %u no array\n", value, index);
+    if (obj == NULL) {
+        fprintf(stderr, "Erro: createObject retornou NULL.\n");
+        exit(1);
+    }
+
+    // 2. Calcular e empilhar a referência (deslocamento na heap)
+    // A referência é o deslocamento do objeto em relação ao início da heap.
+    u4 object_ref = (u4)((u1*)obj - frame->jvm_ref->heap);
+    pushOperand(frame, object_ref);
 }
 

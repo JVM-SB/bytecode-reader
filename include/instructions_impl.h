@@ -109,6 +109,8 @@ void iastore_impl(Frame *frame);
 void dastore_impl(Frame *frame);
 void fastore_impl(Frame *frame);
 void lastore_impl(Frame *frame);
+void iaload_impl(Frame *frame);
+void new_impl(Frame *frame);
 
 // Aritmética (int)
 void iadd_impl(Frame *frame);

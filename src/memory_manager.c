@@ -59,7 +59,7 @@ Object* createObject(JVM *jvm, u4 class_index, u4 fields_size) {
 
 Array* createArray(JVM *jvm, u4 length, u1 type, u1 element_size) {
     u4 total_size = sizeof(Array) + (length * element_size);
-    printf("DEBUG: total_size = %u, length = %u, element_size = %u\n", total_size, length, element_size);
+    //printf("DEBUG: total_size = %u, length = %u, element_size = %u\n", total_size, length, element_size);
     Array *arr = (Array*)allocHeap(jvm, total_size);
     
     arr->type = type;
