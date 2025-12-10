@@ -16,6 +16,7 @@ u1* allocHeap(JVM *jvm, u4 size);
 //  Objetos e Arrays
 Object* createObject(JVM *jvm, u4 class_index, u4 fields_size);
 Array* createArray(JVM *jvm, u4 length, u1 type, u1 element_size);
+u4 registerObject(JVM *jvm, Object *obj);
 
 
 // Carregador de Classes

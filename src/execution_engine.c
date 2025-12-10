@@ -198,6 +198,34 @@ void initExecutionEngine() {
     // LDC
     instructions[ldc]       = ldc_impl;
     instructions[ldc2_w]    = ldc2_w_impl;
+
+    // Referências
+    instructions[aload]     = aload_impl;
+    instructions[aload_0]   = aload_0_impl;
+    instructions[aload_1]   = aload_1_impl;
+    instructions[aload_2]   = aload_2_impl;
+    instructions[aload_3]   = aload_3_impl;
+    
+    instructions[astore]    = astore_impl;
+    instructions[astore_0]  = astore_0_impl;
+    instructions[astore_1]  = astore_1_impl;
+    instructions[astore_2]  = astore_2_impl;
+    instructions[astore_3]  = astore_3_impl;
+    
+    instructions[areturn]   = areturn_impl;
+
+    // Objetos
+    instructions[new_]          = new_impl;
+    instructions[getfield]      = getfield_impl;
+    instructions[putfield]      = putfield_impl;
+    instructions[checkcast]     = checkcast_impl;
+    instructions[instanceof_]   = instanceof_impl;
+    instructions[arraylength]   = arraylength_impl;
+
+    // Invocação e Controle
+    instructions[invokespecial] = invokespecial_impl;
+    instructions[ifnull]        = ifnull_impl;
+    instructions[ifnonnull]     = ifnonnull_impl;
 }
 
 void execute(JVM *jvm) {

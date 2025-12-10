@@ -9,7 +9,7 @@
 #define MAX_OP_STACK 256                // Tamanho da pilha de operandos por frame
 #define MAX_LOCALS 256                  // Máximo de variáveis locais
 #define HEAP_SIZE 32 * 1024 * 1024      // 32MB de Heap
-
+#define MAX_OBJECTS 10000             // Máximo de objetos na heap
 
 // Tipos de Referência
 typedef struct Object {
@@ -49,6 +49,9 @@ typedef struct JVM {
 
     ClassFile **method_area;
     u4 method_area_count;
+
+    Object **objects;
+    u4 objects_count;
 } JVM;
 
 #endif // JVM_STRUCTURES_H

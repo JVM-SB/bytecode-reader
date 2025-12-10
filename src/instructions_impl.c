@@ -4,6 +4,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <helpers.h>
+#include "reader.h"
+#include "memory_manager.h"
 #include "instructions_impl.h"
 
 #define READ_U1(f) (f->bytecode[f->pc++])
@@ -18,6 +20,40 @@ void nop_impl(Frame *frame) {
 void unimpl(Frame *frame) {
     printf("Instrucao nao implementada (PC: %u)\n", frame->pc - 1);
     exit(-1);
+}
+
+// ALOAD e ASTORE
+void aload_impl(Frame *frame) {
+    u1 index = READ_U1(frame);
+    pushOperand(frame, frame->local_variables[index]);
+}
+
+void aload_0_impl(Frame *frame) { pushOperand(frame, frame->local_variables[0]); }
+void aload_1_impl(Frame *frame) { pushOperand(frame, frame->local_variables[1]); }
+void aload_2_impl(Frame *frame) { pushOperand(frame, frame->local_variables[2]); }
+void aload_3_impl(Frame *frame) { pushOperand(frame, frame->local_variables[3]); }
+
+void astore_impl(Frame *frame) {
+    u1 index = READ_U1(frame);
+    frame->local_variables[index] = popOperand(frame);
+}
+
+void astore_0_impl(Frame *frame) { frame->local_variables[0] = popOperand(frame); }
+void astore_1_impl(Frame *frame) { frame->local_variables[1] = popOperand(frame); }
+void astore_2_impl(Frame *frame) { frame->local_variables[2] = popOperand(frame); }
+void astore_3_impl(Frame *frame) { frame->local_variables[3] = popOperand(frame); }
+
+void areturn_impl(Frame *frame) {
+    u4 ref = popOperand(frame);
+    JVM *jvm = frame->jvm_ref;
+    Frame *prev_frame = frame->previous;
+    
+    if (prev_frame != NULL) {
+        pushOperand(prev_frame, ref);
+    }
+    
+    jvm->current_frame = prev_frame;
+    deleteFrame(frame);
 }
 
 // CONSTANTES 
@@ -1302,4 +1338,366 @@ void invokevirtual_impl(Frame *frame) {
     } else {
         fprintf(stderr, "Metodo virtual nao simulado: %s\n", method_name);
     }
+}
+
+// Auxiliares invokes
+
+
+// Busca uma classe já carregada na Área de Métodos
+static ClassFile* findClassInMethodArea(JVM *jvm, const char *classname) {
+    for (int i = 0; i < jvm->method_area_count; i++) {
+        ClassFile *cf = jvm->method_area[i];
+        // Nome da classe está no índice apontado por this_class
+        u2 this_class_idx = cf->this_class;
+        u2 name_idx = cf->constant_pool[this_class_idx - 1].info.class_info.name_index;
+        char *name = (char *)cf->constant_pool[name_idx - 1].info.utf8_info.bytes;
+        if (strcmp(name, classname) == 0) {
+            return cf;
+        }
+    }
+    return NULL;
+}
+
+// Calcula tamanho dos campos de instância (não estáticos) para alocar memória
+static u4 calculateFieldSize(ClassFile *cf) {
+    u4 size = 0;
+    for(int i = 0; i < cf->fields_count; i++) {
+        // Ignora campos estáticos (ACC_STATIC = 0x0008)
+        if (!(cf->fields[i].access_flags & 0x0008)) {
+            // Verifica se é long/double (ocupa 2 slots)
+            u2 desc_idx = cf->fields[i].descriptor_index;
+            char *desc = (char *)cf->constant_pool[desc_idx-1].info.utf8_info.bytes;
+            if (desc[0] == 'J' || desc[0] == 'D') size += 2;
+            else size += 1;
+        }
+    }
+    return size;
+}
+
+// Helper para recuperar ponteiro a partir do índice
+static Object* getObjectRef(JVM *jvm, u4 index) {
+    if (index == 0) return NULL;
+    if (index >= jvm->objects_count) {
+        fprintf(stderr, "Erro: Referencia de objeto invalida (%u)\n", index);
+        exit(1);
+    }
+    return jvm->objects[index];
+}
+
+// Objetos
+
+void new_impl(Frame *frame) {
+    u2 index = READ_U2(frame);
+    cp_info *cp = frame->cf_ref->constant_pool;
+    
+    // 1. Obter nome da classe a ser instanciada
+    u2 class_info_idx = index;
+    u2 name_index = cp[class_info_idx-1].info.class_info.name_index;
+    char *classname = (char *)cp[name_index-1].info.utf8_info.bytes;
+
+    // 2. Verificar se já está carregada
+    JVM *jvm = frame->jvm_ref;
+    ClassFile *targetClass = findClassInMethodArea(jvm, classname);
+    // 3. Simulação de ClassLoader: Se não carregada, tenta ler do disco
+    if (targetClass == NULL) {
+        printf("Tentando carregar classe %s do disco...\n", classname);
+        char filename[256];
+        // Tenta no diretório local ou na pasta exemplos
+        sprintf(filename, "%s.class", classname);
+        targetClass = readFile(filename);
+        
+        if (targetClass == NULL) {
+             sprintf(filename, "exemplos/%s.class", classname);
+             targetClass = readFile(filename);
+        }
+
+        if (targetClass == NULL) {
+            fprintf(stderr, "Erro Fatal: Nao foi possivel encontrar a classe '%s' para instanciar.\n", classname);
+            exit(1);
+        }
+        loadClass(jvm, targetClass);
+    }
+
+    // 4. Alocar Objeto
+    u4 fieldsSize = calculateFieldSize(targetClass);
+    
+    // Encontrar índice da classe na method_area
+    u4 class_area_index = 0;
+    for(int i=0; i < jvm->method_area_count; i++) {
+        if(jvm->method_area[i] == targetClass) {
+            class_area_index = i;
+            break;
+        }
+    }
+
+    Object *obj = createObject(jvm, class_area_index, fieldsSize);
+
+    // 5. Empilhar Referência
+    u4 obj_index = registerObject(jvm, obj);
+    pushOperand(frame, obj_index);
+}
+
+void putfield_impl(Frame *frame) {
+    u2 index = READ_U2(frame);
+    cp_info *cp = frame->cf_ref->constant_pool;
+
+    // Resolver Nome e Descritor do Campo
+    u2 name_type_index = cp[index-1].info.fieldref_info.name_and_type_index;
+    u2 name_idx = cp[name_type_index-1].info.nameandtype_info.name_index;
+    u2 desc_idx = cp[name_type_index-1].info.nameandtype_info.descriptor_index;
+    
+    char *field_name = (char *)cp[name_idx-1].info.utf8_info.bytes;
+    char *descriptor = (char *)cp[desc_idx-1].info.utf8_info.bytes;
+
+    // Valor a ser gravado (Wide ou Normal)
+    int is_wide = (descriptor[0] == 'J' || descriptor[0] == 'D');
+    u8 val_wide = 0;
+    u4 val_single = 0;
+
+    if (is_wide) val_wide = popLong(frame);
+    else val_single = popOperand(frame);
+
+    u4 object_idx = popOperand(frame);
+    if (object_idx == 0) {
+        fprintf(stderr, "NullPointerException em putfield\n");
+        exit(1);
+    }
+
+    Object *obj = getObjectRef(frame->jvm_ref, object_idx);
+    
+    ClassFile *cf = getClass(frame->jvm_ref, obj->class_index);
+
+    // Calcular offset do campo dentro do objeto
+    int offset = 0;
+    int found = 0;
+    for (int i = 0; i < cf->fields_count; i++) {
+        // Pula estáticos (putfield só mexe em instância)
+        if (cf->fields[i].access_flags & 0x0008) continue;
+
+        u2 fname_idx = cf->fields[i].name_index;
+        char *fname = (char *)cf->constant_pool[fname_idx-1].info.utf8_info.bytes;
+        
+        if (strcmp(fname, field_name) == 0) {
+            found = 1;
+            break;
+        }
+
+        // Soma tamanho do campo anterior ao offset
+        u2 fdesc_idx = cf->fields[i].descriptor_index;
+        char *fdesc = (char *)cf->constant_pool[fdesc_idx-1].info.utf8_info.bytes;
+        if (fdesc[0] == 'J' || fdesc[0] == 'D') offset += 2;
+        else offset += 1;
+    }
+
+    if (!found) {
+        fprintf(stderr, "Erro: Campo '%s' nao encontrado na classe.\n", field_name);
+        exit(1);
+    }
+
+    // Gravar na "memória" do objeto (tratando u1* como u4*)
+    u4 *fields_data = (u4*)obj->data;
+    if (is_wide) {
+        u4 low = (u4)(val_wide & 0xFFFFFFFF);
+        u4 high = (u4)(val_wide >> 32);
+        fields_data[offset] = high; 
+        fields_data[offset+1] = low;
+    } else {
+        fields_data[offset] = val_single;
+    }
+}
+
+void getfield_impl(Frame *frame) {
+    u2 index = READ_U2(frame);
+    cp_info *cp = frame->cf_ref->constant_pool;
+
+    // Resolver Field
+    u2 name_type_index = cp[index-1].info.fieldref_info.name_and_type_index;
+    u2 name_idx = cp[name_type_index-1].info.nameandtype_info.name_index;
+    u2 desc_idx = cp[name_type_index-1].info.nameandtype_info.descriptor_index;
+
+    char *field_name = (char *)cp[name_idx-1].info.utf8_info.bytes;
+    char *descriptor = (char *)cp[desc_idx-1].info.utf8_info.bytes;
+
+    u4 object_idx = popOperand(frame);
+    if (object_idx == 0) {
+        fprintf(stderr, "NullPointerException em getfield\n");
+        exit(1);
+    }
+
+    Object *obj = getObjectRef(frame->jvm_ref, object_idx);
+    ClassFile *cf = getClass(frame->jvm_ref, obj->class_index);
+
+    // Calcular offset (mesma lógica do putfield)
+    int offset = 0;
+    int found = 0;
+    for (int i = 0; i < cf->fields_count; i++) {
+        if (cf->fields[i].access_flags & 0x0008) continue;
+
+        u2 fname_idx = cf->fields[i].name_index;
+        char *fname = (char *)cf->constant_pool[fname_idx-1].info.utf8_info.bytes;
+        if (strcmp(fname, field_name) == 0) {
+            found = 1;
+            break;
+        }
+        u2 fdesc_idx = cf->fields[i].descriptor_index;
+        char *fdesc = (char *)cf->constant_pool[fdesc_idx-1].info.utf8_info.bytes;
+        if (fdesc[0] == 'J' || fdesc[0] == 'D') offset += 2;
+        else offset += 1;
+    }
+
+    if (!found) {
+        fprintf(stderr, "Erro: Campo '%s' nao encontrado.\n", field_name);
+        exit(1);
+    }
+
+    u4 *fields_data = (u4*)obj->data;
+    if (descriptor[0] == 'J' || descriptor[0] == 'D') {
+        u4 high = fields_data[offset];
+        u4 low = fields_data[offset+1];
+        u8 val = ((u8)high << 32) | low;
+        pushLong(frame, val);
+    } else {
+        pushOperand(frame, fields_data[offset]);
+    }
+}
+
+// Invocações
+
+void invokespecial_impl(Frame *frame) {
+    u2 index = READ_U2(frame);
+    cp_info *cp = frame->cf_ref->constant_pool;
+
+    // 1. Resolver Classe e Método
+    u2 class_index = cp[index-1].info.methodref_info.class_index;
+    u2 name_type_index = cp[index-1].info.methodref_info.name_and_type_index;
+    
+    u2 class_name_idx = cp[class_index-1].info.class_info.name_index;
+    char *classname = (char *)cp[class_name_idx-1].info.utf8_info.bytes;
+
+    u2 name_idx = cp[name_type_index-1].info.nameandtype_info.name_index;
+    u2 desc_idx = cp[name_type_index-1].info.nameandtype_info.descriptor_index;
+    char *method_name = (char *)cp[name_idx-1].info.utf8_info.bytes;
+    char *descriptor = (char *)cp[desc_idx-1].info.utf8_info.bytes;
+
+    // *** SIMULAÇÃO DE OBJECT.<INIT> ***
+    // Como especificado, podemos usar Object.class, mas é mais simples mockar
+    // o construtor padrão para não precisar ler o arquivo .class do Java.
+    if (strcmp(classname, "java/lang/Object") == 0 && strcmp(method_name, "<init>") == 0) {
+        popOperand(frame); // Remove 'this' da pilha
+        return;
+    }
+
+    // Carregar classe do usuário se necessário
+    JVM *jvm = frame->jvm_ref;
+    ClassFile *targetClass = findClassInMethodArea(jvm, classname);
+    if (!targetClass) {
+         // Tenta carregar
+         char filename[256];
+         sprintf(filename, "exemplos/%s.class", classname); // Tenta pasta exemplos
+         targetClass = readFile(filename);
+         if(!targetClass) { // Tenta local
+             sprintf(filename, "%s.class", classname);
+             targetClass = readFile(filename);
+         }
+         if (!targetClass) {
+             fprintf(stderr, "Erro: Classe '%s' nao encontrada (invokespecial).\n", classname);
+             exit(1);
+         }
+         loadClass(jvm, targetClass);
+    }
+
+    method_info *method = findMethod(targetClass, method_name, descriptor);
+    if (!method) {
+        fprintf(stderr, "Erro: Metodo '%s' nao encontrado.\n", method_name);
+        exit(1);
+    }
+
+    // Preparar novo frame
+    code_attribute *code = findCodeAttribute(targetClass, method);
+    Frame *newFrame = createFrame(jvm, targetClass, code, frame);
+
+    // Passagem de argumentos (contagem manual simplificada)
+    // +1 para o 'this'
+    int num_args = 0;
+    int i = 1; 
+    while (descriptor[i] != ')') {
+        if (descriptor[i] == 'L') { while(descriptor[i] != ';') i++; num_args++; }
+        else if (descriptor[i] == '[') { while(descriptor[i] == '[') i++; if(descriptor[i]=='L') while(descriptor[i]!=';') i++; num_args++; }
+        else if (descriptor[i] == 'J' || descriptor[i] == 'D') { num_args += 2; i++; }
+        else { num_args++; i++; }
+    }
+    
+    int total_slots = num_args + 1; // +1 'this'
+    u4 *args = malloc(sizeof(u4) * total_slots);
+    
+    // Desempilha na ordem inversa
+    for(int k = total_slots - 1; k >= 0; k--) {
+        args[k] = popOperand(frame);
+    }
+    
+    // O 'this' está em args[0]
+    if (args[0] == 0) {
+        fprintf(stderr, "NullPointerException no invokespecial (this == null)\n");
+        exit(1);
+    }
+
+    // Coloca nas locais do novo frame
+    for(int k = 0; k < total_slots; k++) {
+        newFrame->local_variables[k] = args[k];
+    }
+    free(args);
+
+    jvm->current_frame = newFrame;
+}
+
+void checkcast_impl(Frame *frame) {
+    u2 index = READ_U2(frame);
+    // Para simplificar, não validamos a hierarquia de tipos real aqui.
+    // Apenas garantimos que a instrução passa sem erro se não for nulo.
+    (void)index;
+}
+
+void instanceof_impl(Frame *frame) {
+    u2 index = READ_U2(frame);
+    u4 ref = popOperand(frame);
+    if (ref == 0) pushOperand(frame, 0);
+    else pushOperand(frame, 1); // Simplificação: assume true se não null
+    (void)index;
+}
+
+void ifnull_impl(Frame *frame) {
+    // Leitura manual do offset com sinal
+    u1 b1 = frame->bytecode[frame->pc];
+    u1 b2 = frame->bytecode[frame->pc+1];
+    frame->pc += 2;
+    int16_t offset = (int16_t)((b1 << 8) | b2);
+
+    u4 ref = popOperand(frame);
+    if (ref == 0) {
+        frame->pc = (frame->pc - 3) + offset;
+    }
+}
+
+void ifnonnull_impl(Frame *frame) {
+    u1 b1 = frame->bytecode[frame->pc];
+    u1 b2 = frame->bytecode[frame->pc+1];
+    frame->pc += 2;
+    int16_t offset = (int16_t)((b1 << 8) | b2);
+
+    u4 ref = popOperand(frame);
+    if (ref != 0) {
+        frame->pc = (frame->pc - 3) + offset;
+    }
+}
+
+void arraylength_impl(Frame *frame) {
+    u4 array_idx = popOperand(frame);
+    if (array_idx == 0) {
+        fprintf(stderr, "NullPointerException em arraylength\n");
+        exit(1);
+    }
+    // Na nossa estrutura simplificada (jvm_structures.h), Array e Object são structs.
+    // Assumimos que o ponteiro é para um Array.
+    Array *arr = (Array*)getObjectRef(frame->jvm_ref, array_idx);
+    pushOperand(frame, arr->length);
 }

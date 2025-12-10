@@ -197,4 +197,34 @@ void invokevirtual_impl(Frame *frame);
 void ldc_impl(Frame *frame);
 void ldc2_w_impl(Frame *frame);
 
+// ... (código existente)
+
+// --- REFERÊNCIAS (ALOAD / ASTORE / ARETURN) ---
+void aload_impl(Frame *frame);
+void aload_0_impl(Frame *frame);
+void aload_1_impl(Frame *frame);
+void aload_2_impl(Frame *frame);
+void aload_3_impl(Frame *frame);
+
+void astore_impl(Frame *frame);
+void astore_0_impl(Frame *frame);
+void astore_1_impl(Frame *frame);
+void astore_2_impl(Frame *frame);
+void astore_3_impl(Frame *frame);
+
+void areturn_impl(Frame *frame);
+
+// --- OBJETOS E CAMPOS ---
+void new_impl(Frame *frame);
+void getfield_impl(Frame *frame);
+void putfield_impl(Frame *frame);
+void checkcast_impl(Frame *frame);
+void instanceof_impl(Frame *frame);
+void arraylength_impl(Frame *frame);
+
+// --- INVOCAÇÕES E CONTROLE ---
+void invokespecial_impl(Frame *frame);
+void ifnull_impl(Frame *frame);
+void ifnonnull_impl(Frame *frame);
+
 #endif // INSTRUCTIONS_IMPL_H

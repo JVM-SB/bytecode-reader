@@ -16,6 +16,9 @@ void initJVM(JVM *jvm) {
 
     jvm->method_area = (ClassFile**) calloc(128, sizeof(ClassFile*));
     jvm->method_area_count = 0;
+
+    jvm->objects = (Object**) calloc(MAX_OBJECTS, sizeof(Object*));
+    jvm->objects_count = 1;
 }
 
 void freeJVM(JVM *jvm) {
@@ -25,6 +28,13 @@ void freeJVM(JVM *jvm) {
 
     if (jvm->method_area) {
         free(jvm->method_area);
+    }
+
+    if (jvm->objects) {
+        for(u4 i = 1; i < jvm->objects_count; i++) {
+            if (jvm->objects[i]) free(jvm->objects[i]);
+        }
+        free(jvm->objects);
     }
 }
 
@@ -41,6 +51,16 @@ u1* allocHeap(JVM *jvm, u4 size) {
     memset(address, 0, size);
 
     return address;
+}
+
+u4 registerObject(JVM *jvm, Object *obj) {
+    if (jvm->objects_count >= MAX_OBJECTS) {
+        fprintf(stderr, "Erro: Limite de objetos atingido!\n");
+        exit(-1);
+    }
+    u4 index = jvm->objects_count++;
+    jvm->objects[index] = obj;
+    return index;
 }
 
 Object* createObject(JVM *jvm, u4 class_index, u4 fields_size) {
