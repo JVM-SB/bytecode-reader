@@ -226,6 +226,29 @@ void initExecutionEngine() {
     instructions[invokespecial] = invokespecial_impl;
     instructions[ifnull]        = ifnull_impl;
     instructions[ifnonnull]     = ifnonnull_impl;
+
+    // ...
+    instructions[newarray] = newarray_impl;
+    instructions[anewarray] = anewarray_impl;
+    instructions[arraylength] = arraylength_impl;
+
+    instructions[iaload] = iaload_impl;
+    instructions[laload] = laload_impl;
+    instructions[faload] = faload_impl;
+    instructions[daload] = daload_impl;
+    instructions[aaload] = aaload_impl;
+    instructions[baload] = baload_impl;
+    instructions[caload] = caload_impl;
+    instructions[saload] = saload_impl;
+
+    instructions[iastore] = iastore_impl;
+    instructions[lastore] = lastore_impl;
+    instructions[fastore] = fastore_impl;
+    instructions[dastore] = dastore_impl;
+    instructions[aastore] = aastore_impl;
+    instructions[bastore] = bastore_impl;
+    instructions[castore] = castore_impl;
+    instructions[sastore] = sastore_impl;
 }
 
 void execute(JVM *jvm) {

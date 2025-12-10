@@ -227,4 +227,34 @@ void invokespecial_impl(Frame *frame);
 void ifnull_impl(Frame *frame);
 void ifnonnull_impl(Frame *frame);
 
+// ... (código existente)
+
+// --- ARRAYS ---
+
+// Criação e Informação
+void newarray_impl(Frame *frame);
+void anewarray_impl(Frame *frame);
+// void multianewarray_impl(Frame *frame); // (Opcional, raramente usado em exemplos básicos)
+void arraylength_impl(Frame *frame); // Já tínhamos, mas vamos garantir
+
+// Loads (Carregar do array para a pilha)
+void iaload_impl(Frame *frame);
+void laload_impl(Frame *frame);
+void faload_impl(Frame *frame);
+void daload_impl(Frame *frame);
+void aaload_impl(Frame *frame);
+void baload_impl(Frame *frame);
+void caload_impl(Frame *frame);
+void saload_impl(Frame *frame);
+
+// Stores (Gravar da pilha no array)
+void iastore_impl(Frame *frame);
+void lastore_impl(Frame *frame);
+void fastore_impl(Frame *frame);
+void dastore_impl(Frame *frame);
+void aastore_impl(Frame *frame);
+void bastore_impl(Frame *frame);
+void castore_impl(Frame *frame);
+void sastore_impl(Frame *frame);
+
 #endif // INSTRUCTIONS_IMPL_H

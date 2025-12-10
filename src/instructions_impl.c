@@ -1331,12 +1331,20 @@ void invokevirtual_impl(Frame *frame) {
             memcpy(&fval, &val, sizeof(float));
             printf("%f\n", fval);
         }
+        else if (strcmp(descriptor, "(C)V") == 0) {
+            u4 val = popOperand(frame);
+            printf("%c", (char)val);
+        }
+
+        else if (strcmp(descriptor, "()V") == 0) {
+            printf("\n");
+        }
 
         else {
-            fprintf(stderr,"Metodo println/print com descritor nao suportado: %s\n", descriptor);
+            // fprintf(stderr,"Metodo println/print com descritor nao suportado: %s\n", descriptor);
         }
     } else {
-        fprintf(stderr, "Metodo virtual nao simulado: %s\n", method_name);
+        //fprintf(stderr, "Metodo virtual nao simulado: %s\n", method_name);
     }
 }
 
@@ -1690,14 +1698,247 @@ void ifnonnull_impl(Frame *frame) {
     }
 }
 
+// ... includes anteriores ...
+
+// ============================================================================
+// ARRAYS - AUXILIARES E CONSTANTES
+// ============================================================================
+
+#define T_BOOLEAN 4
+#define T_CHAR    5
+#define T_FLOAT   6
+#define T_DOUBLE  7
+#define T_BYTE    8
+#define T_SHORT   9
+#define T_INT     10
+#define T_LONG    11
+
+// Helper para pegar Array da tabela de objetos
+static Array* getArrayRef(JVM *jvm, u4 index) {
+    if (index == 0) return NULL;
+    if (index >= jvm->objects_count) {
+        fprintf(stderr, "Erro: Referencia de array invalida (%u)\n", index);
+        exit(1);
+    }
+    return (Array*)jvm->objects[index]; 
+}
+
+// Macro para validação de limites
+#define CHECK_ARRAY_BOUNDS(arr, idx) \
+    if (arr == NULL) { fprintf(stderr, "NullPointerException (Array access)\n"); exit(1); } \
+    if (idx < 0 || idx >= (int32_t)arr->length) { \
+        fprintf(stderr, "ArrayIndexOutOfBoundsException: Index %d, Length %d\n", idx, arr->length); \
+        exit(1); \
+    }
+
+// ============================================================================
+// CRIAÇÃO DE ARRAYS
+// ============================================================================
+
+void newarray_impl(Frame *frame) {
+    u1 atype = READ_U1(frame);
+    int32_t count = (int32_t)popOperand(frame);
+
+    if (count < 0) {
+        fprintf(stderr, "NegativeArraySizeException\n");
+        exit(1);
+    }
+
+    u1 element_size = 0;
+    switch (atype) {
+        case T_BOOLEAN: case T_BYTE:  element_size = 1; break;
+        case T_CHAR:    case T_SHORT: element_size = 2; break;
+        case T_FLOAT:   case T_INT:   element_size = 4; break;
+        case T_DOUBLE:  case T_LONG:  element_size = 8; break;
+        default:
+            fprintf(stderr, "Erro: Tipo de array invalido (%d)\n", atype);
+            exit(1);
+    }
+
+    // Cria e registra (memory_manager.c deve ter registerObject e createArray)
+    Array *arr = createArray(frame->jvm_ref, (u4)count, atype, element_size);
+    u4 index = registerObject(frame->jvm_ref, (Object*)arr);
+    
+    pushOperand(frame, index);
+}
+
+void anewarray_impl(Frame *frame) {
+    u2 index = READ_U2(frame); // Índice do tipo (class), não usado na alocação física
+    int32_t count = (int32_t)popOperand(frame);
+    
+    if (count < 0) {
+        fprintf(stderr, "NegativeArraySizeException\n");
+        exit(1);
+    }
+
+    // Array de referências armazena IDs (u4) -> 4 bytes
+    Array *arr = createArray(frame->jvm_ref, (u4)count, 0, 4);
+    u4 obj_index = registerObject(frame->jvm_ref, (Object*)arr);
+    
+    pushOperand(frame, obj_index);
+    (void)index;
+}
+
 void arraylength_impl(Frame *frame) {
     u4 array_idx = popOperand(frame);
     if (array_idx == 0) {
         fprintf(stderr, "NullPointerException em arraylength\n");
         exit(1);
     }
-    // Na nossa estrutura simplificada (jvm_structures.h), Array e Object são structs.
-    // Assumimos que o ponteiro é para um Array.
-    Array *arr = (Array*)getObjectRef(frame->jvm_ref, array_idx);
+    // Recupera o array da tabela
+    Array *arr = getArrayRef(frame->jvm_ref, array_idx);
     pushOperand(frame, arr->length);
+}
+
+// ============================================================================
+// LOADS (CARREGAR DO ARRAY PARA A PILHA USANDO MEMCPY)
+// ============================================================================
+
+void iaload_impl(Frame *frame) {
+    int32_t index = (int32_t)popOperand(frame);
+    u4 array_idx = popOperand(frame);
+    Array *arr = getArrayRef(frame->jvm_ref, array_idx);
+    CHECK_ARRAY_BOUNDS(arr, index);
+    
+    u4 val;
+    // Copia 4 bytes da posição calculada para a variável val
+    memcpy(&val, arr->data + (index * 4), 4);
+    pushOperand(frame, val);
+}
+
+void faload_impl(Frame *frame) {
+    iaload_impl(frame); // Float também tem 4 bytes, mesma lógica
+}
+
+void laload_impl(Frame *frame) {
+    int32_t index = (int32_t)popOperand(frame);
+    u4 array_idx = popOperand(frame);
+    Array *arr = getArrayRef(frame->jvm_ref, array_idx);
+    CHECK_ARRAY_BOUNDS(arr, index);
+    
+    u8 val;
+    // Copia 8 bytes
+    memcpy(&val, arr->data + (index * 8), 8);
+    
+    // Divide em High e Low para empilhar (Big Endian logic na pilha)
+    u4 high = (u4)(val >> 32);
+    u4 low  = (u4)(val & 0xFFFFFFFF);
+    
+    pushOperand(frame, high);
+    pushOperand(frame, low);
+}
+
+void daload_impl(Frame *frame) {
+    laload_impl(frame); // Double também tem 8 bytes, mesma lógica
+}
+
+void aaload_impl(Frame *frame) {
+    iaload_impl(frame); // Referência é um ID u4, mesma lógica do int
+}
+
+void baload_impl(Frame *frame) { // Byte e Boolean
+    int32_t index = (int32_t)popOperand(frame);
+    u4 array_idx = popOperand(frame);
+    Array *arr = getArrayRef(frame->jvm_ref, array_idx);
+    CHECK_ARRAY_BOUNDS(arr, index);
+    
+    int8_t val; // Lê 1 byte com sinal
+    memcpy(&val, arr->data + (index * 1), 1);
+    
+    // Expande sinal para 32 bits e empilha
+    pushOperand(frame, (int32_t)val);
+}
+
+void caload_impl(Frame *frame) { // Char (unsigned short)
+    int32_t index = (int32_t)popOperand(frame);
+    u4 array_idx = popOperand(frame);
+    Array *arr = getArrayRef(frame->jvm_ref, array_idx);
+    CHECK_ARRAY_BOUNDS(arr, index);
+    
+    u2 val; // Lê 2 bytes sem sinal
+    memcpy(&val, arr->data + (index * 2), 2);
+    
+    pushOperand(frame, (u4)val); // Zero-extend
+}
+
+void saload_impl(Frame *frame) { // Short (signed short)
+    int32_t index = (int32_t)popOperand(frame);
+    u4 array_idx = popOperand(frame);
+    Array *arr = getArrayRef(frame->jvm_ref, array_idx);
+    CHECK_ARRAY_BOUNDS(arr, index);
+    
+    int16_t val; // Lê 2 bytes com sinal
+    memcpy(&val, arr->data + (index * 2), 2);
+    
+    pushOperand(frame, (int32_t)val); // Sign-extend
+}
+
+// ============================================================================
+// STORES (GRAVAR DA PILHA NO ARRAY USANDO MEMCPY)
+// ============================================================================
+
+void iastore_impl(Frame *frame) {
+    u4 val = popOperand(frame);
+    int32_t index = (int32_t)popOperand(frame);
+    u4 array_idx = popOperand(frame);
+    Array *arr = getArrayRef(frame->jvm_ref, array_idx);
+    CHECK_ARRAY_BOUNDS(arr, index);
+    
+    // Copia da variável local para a heap
+    memcpy(arr->data + (index * 4), &val, 4);
+}
+
+void fastore_impl(Frame *frame) {
+    iastore_impl(frame);
+}
+
+void lastore_impl(Frame *frame) {
+    u4 low = popOperand(frame);
+    u4 high = popOperand(frame);
+    int32_t index = (int32_t)popOperand(frame);
+    u4 array_idx = popOperand(frame);
+    Array *arr = getArrayRef(frame->jvm_ref, array_idx);
+    CHECK_ARRAY_BOUNDS(arr, index);
+    
+    // Reconstrói o u8
+    u8 val = ((u8)high << 32) | low;
+    
+    // Copia 8 bytes para a heap
+    memcpy(arr->data + (index * 8), &val, 8);
+}
+
+void dastore_impl(Frame *frame) {
+    lastore_impl(frame);
+}
+
+void aastore_impl(Frame *frame) {
+    iastore_impl(frame); // Grava ID (u4)
+}
+
+void bastore_impl(Frame *frame) {
+    u4 val_u4 = popOperand(frame);
+    int32_t index = (int32_t)popOperand(frame);
+    u4 array_idx = popOperand(frame);
+    Array *arr = getArrayRef(frame->jvm_ref, array_idx);
+    CHECK_ARRAY_BOUNDS(arr, index);
+    
+    // Trunca para 1 byte
+    u1 val = (u1)val_u4;
+    memcpy(arr->data + (index * 1), &val, 1);
+}
+
+void castore_impl(Frame *frame) {
+    u4 val_u4 = popOperand(frame);
+    int32_t index = (int32_t)popOperand(frame);
+    u4 array_idx = popOperand(frame);
+    Array *arr = getArrayRef(frame->jvm_ref, array_idx);
+    CHECK_ARRAY_BOUNDS(arr, index);
+    
+    // Trunca para 2 bytes
+    u2 val = (u2)val_u4;
+    memcpy(arr->data + (index * 2), &val, 2);
+}
+
+void sastore_impl(Frame *frame) {
+    castore_impl(frame); // Short e Char ocupam 2 bytes, mesma cópia
 }

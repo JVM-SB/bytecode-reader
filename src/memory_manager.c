@@ -77,19 +77,25 @@ Object* createObject(JVM *jvm, u4 class_index, u4 fields_size) {
     return obj;
 }
 
+
+// Modifique ou Substitua a função createArray existente:
 Array* createArray(JVM *jvm, u4 length, u1 type, u1 element_size) {
     Array *arr = (Array*) calloc(1, sizeof(Array));
     if (arr == NULL) {
-        fprintf(stderr, "Erro: Não foi possível alocar o array\n");
+        fprintf(stderr, "Erro: Nao foi possivel alocar estrutura do array\n");
         exit(-1);
     }
-
     arr->type = type;
     arr->length = length;
-
-    u4 total_size = length * element_size;
-    arr->data = allocHeap(jvm, total_size);
-
+    
+    // Aloca dados na Heap da JVM
+    u4 total_bytes = length * element_size;
+    if (total_bytes > 0) {
+        arr->data = allocHeap(jvm, total_bytes);
+    } else {
+        arr->data = NULL; // Array vazio
+    }
+    
     return arr;
 }
 
