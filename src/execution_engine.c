@@ -144,7 +144,7 @@ void initExecutionEngine() {
     instructions[d2i] = d2i_impl;
     instructions[d2l] = d2l_impl;
     instructions[d2f] = d2f_impl;
-    
+
     // Retorno
     instructions[ireturn] = ireturn_impl;
     instructions[return_] = return_impl;
@@ -184,6 +184,10 @@ void initExecutionEngine() {
     instructions[if_icmple] = if_icmple_impl;
 
     instructions[goto_]     = goto_impl;
+
+    // Switches
+    instructions[tableswitch]  = tableswitch_impl;
+    instructions[lookupswitch] = lookupswitch_impl;
 
 
     // Instruções de Invocação e Campo Estático

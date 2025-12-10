@@ -184,6 +184,10 @@ void if_acmpeq_impl(Frame *frame);
 void if_acmpne_impl(Frame *frame);
 void goto_impl(Frame *frame);
 
+// Switches
+void tableswitch_impl(Frame *frame);
+void lookupswitch_impl(Frame *frame);
+
 // Métodos de invocação
 void getstatic_impl(Frame *frame);
 void invokestatic_impl(Frame *frame);

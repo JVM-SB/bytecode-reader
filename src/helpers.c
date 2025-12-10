@@ -4,6 +4,30 @@
 
 #include "helpers.h"
 
+int countArguments(const char *descriptor) {
+    int count = 0;
+    int i = 1; // Pula o '('
+    while (descriptor[i] != ')') {
+        if (descriptor[i] == 'L') {
+            // Objetos (Ljava/lang/String;)
+            count++;
+            while (descriptor[i] != ';') i++;
+        } else if (descriptor[i] == '[') {
+            // Arrays
+            while (descriptor[i] == '[') i++;
+            if (descriptor[i] == 'L') while (descriptor[i] != ';') i++;
+            count++;
+        } else if (descriptor[i] == 'J' || descriptor[i] == 'D') {
+            // Long e Double contam como 2 slots na pilha
+            count += 2;
+        } else {
+            // Tipos primitivos (I, F, B, C, S, Z)
+            count++;
+        }
+        i++;
+    }
+    return count;
+}
 
 int constantPoolStringIsEqual(const ClassFile *cf, u2 index, const char *str) {
     if (index == 0 || index >= cf->constant_pool_count) {

@@ -1050,34 +1050,68 @@ void goto_impl(Frame *frame) {
     branch(frame, offset);
 }
 
-// Instruções de Invocação e Campo Estático
+// ----------------------------------------------------------------------------
+// Switches
+// ----------------------------------------------------------------------------
 
+void tableswitch_impl(Frame *frame) {
+    
+    u4 opcode_pc = frame->pc - 1; 
 
-// --- HELPER: Conta argumentos baseado no descritor (Ex: "(II)V" -> 2) ---
-static int countArguments(const char *descriptor) {
-    int count = 0;
-    int i = 1; // Pula o '('
-    while (descriptor[i] != ')') {
-        if (descriptor[i] == 'L') {
-            // Objetos (Ljava/lang/String;)
-            count++;
-            while (descriptor[i] != ';') i++;
-        } else if (descriptor[i] == '[') {
-            // Arrays
-            while (descriptor[i] == '[') i++;
-            if (descriptor[i] == 'L') while (descriptor[i] != ';') i++;
-            count++;
-        } else if (descriptor[i] == 'J' || descriptor[i] == 'D') {
-            // Long e Double contam como 2 slots na pilha
-            count += 2;
-        } else {
-            // Tipos primitivos (I, F, B, C, S, Z)
-            count++;
-        }
-        i++;
+    u4 current_addr = frame->pc;
+    u4 padding = (4 - (current_addr % 4)) % 4;
+    frame->pc += padding;
+
+    int32_t default_offset = (int32_t)READ_U4(frame);
+    int32_t low            = (int32_t)READ_U4(frame);
+    int32_t high           = (int32_t)READ_U4(frame);
+
+    int32_t index = (int32_t)popOperand(frame);
+    int32_t jump_offset;
+
+    // Se o índice está fora de [low, high], vai para default
+    if (index < low || index > high) {
+        jump_offset = default_offset;
+    } else {
+        u4 table_offset_pos = (u4)(index - low) * 4;
+        
+        u1* ptr = &frame->bytecode[frame->pc + table_offset_pos];
+        
+        jump_offset = (int32_t)((ptr[0] << 24) | (ptr[1] << 16) | (ptr[2] << 8) | ptr[3]);
     }
-    return count;
+
+    // Realiza o salto relativo ao opcode original
+    frame->pc = opcode_pc + jump_offset;
 }
+
+void lookupswitch_impl(Frame *frame) {
+    u4 opcode_pc = frame->pc - 1;
+
+    u4 padding = (4 - (frame->pc % 4)) % 4;
+    frame->pc += padding;
+
+    // Lê default e número de pares
+    int32_t default_offset = (int32_t)READ_U4(frame);
+    int32_t npairs         = (int32_t)READ_U4(frame);
+    int32_t key = (int32_t)popOperand(frame);
+    
+    int32_t jump_offset = default_offset;
+
+    for (int i = 0; i < npairs; i++) {
+        int32_t match  = (int32_t)READ_U4(frame);
+        int32_t offset = (int32_t)READ_U4(frame);
+
+        if (key == match) {
+            jump_offset = offset;
+            break;
+        }
+    }
+    // Realiza o salto relativo ao opcode original
+    frame->pc = opcode_pc + jump_offset;
+}
+
+
+// Instruções de Invocação e Campo Estático
 
 // ----------------------------------------------------------------------------
 // INSTRUÇÃO: INVOKESTATIC (0xB8)
